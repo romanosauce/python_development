@@ -29,7 +29,8 @@ class Field:
     def encounter(self, x, y):
         pos = (x, y)
         if pos in self.get_monsters_pos():
-            print(cowsay.cowsay(self.get_monster(pos).get_phrase()))
+            print(cowsay.cowsay(self.get_monster(pos).get_phrase(),
+                                cow=self.get_monster(pos).get_name()))
 
 
 class Player:
@@ -58,6 +59,9 @@ class Monster:
 
     def get_phrase(self):
         return self.phrase
+
+    def get_name(self):
+        return self.name
 
 
 field = Field()
