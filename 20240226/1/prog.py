@@ -62,16 +62,24 @@ while (comm := input()):
     pars_comm = comm.split()
     match pars_comm:
         case [("up" | "down" | "left" | "right") as side, *options]:
-            match options:
-                case []:
-                    player.make_move(side)
-                case _:
-                    print("Invalid arguments")
+            if len(options) != 0:
+                print("Invalid arguments")
+            else:
+                player.make_move(side)
         case ["addmon", *options]:
-            match options:
-                case [x, y, phrase]:
+            if len(options) != 3:
+                print("Invalid arguments")
+            else:
+                try:
+                    x = int(options[0])
+                    y = int(options[1])
+                except Exception:
+                    print("Invalid arguments")
+                    continue
+                if not (0 <= x <= 9 and 0 <= y <= 9):
+                    print("Invalid arguments")
+                else:
+                    phrase = options[2]
                     field.add_monster(int(x), int(y), Monster(phrase))
-                case _:
-                    print("Invalid argumets")
         case _:
             print("Invalid command")
