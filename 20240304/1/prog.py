@@ -1,4 +1,5 @@
 import cowsay
+import io
 
 
 class Field:
@@ -9,7 +10,10 @@ class Field:
         self.monsters_pos = {}
 
     def add_monster(self, x, y, monster):
-        if monster.get_name() in cowsay.list_cows():
+        if monster.get_name() in cowsay.list_cows() or \
+                monster.get_name() in cows_dict:
+            if monster.get_name() in cows_dict:
+                monster.set_custom(True)
             subst = False
             if (x, y) in self.monsters_pos:
                 subst = True
@@ -29,8 +33,14 @@ class Field:
     def encounter(self, x, y):
         pos = (x, y)
         if pos in self.get_monsters_pos():
-            print(cowsay.cowsay(self.get_monster(pos).get_phrase(),
-                                cow=self.get_monster(pos).get_name()))
+            monster = self.get_monster(pos)
+            if monster.get_custom():
+                print(cowsay.cowsay(monster.get_phrase(),
+                                    cowfile=cows_dict[monster.get_name()]))
+            else:
+                print(cowsay.cowsay(monster.get_phrase(),
+                                    cow=monster.get_name()))
+
 
 
 class Player:
@@ -53,9 +63,16 @@ class Player:
 
 
 class Monster:
-    def __init__(self, name, phrase):
+    def __init__(self, name, phrase, custom=False):
         self.phrase = phrase
         self.name = name
+        self.custom = custom
+
+    def set_custom(self, val):
+        self.custom = val
+
+    def get_custom(self):
+        return self.custom
 
     def get_phrase(self):
         return self.phrase
@@ -63,6 +80,23 @@ class Monster:
     def get_name(self):
         return self.name
 
+
+jgsbat = cowsay.read_dot_cow(io.StringIO('''
+$the_cow = <<EOC;
+         $thoughts
+          $thoughts
+    ,_                    _,
+    ) '-._  ,_    _,  _.-' (
+    )  _.-'.|\\--//|.'-._  (
+     )'   .'\/o\/o\/'.   `(
+      ) .' . \====/ . '. (
+       )  / <<    >> \  (
+        '-._/``  ``\_.-'
+  jgs     __\\'--'//__
+         (((""`  `"")))EOC
+'''))
+
+cows_dict = {'jgsbat': jgsbat}
 
 field = Field()
 player = Player(field)
