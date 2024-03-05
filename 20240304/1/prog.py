@@ -54,10 +54,10 @@ class Player:
 
 
 class Monster:
-    def __init__(self, name, phrase, hp):
-        self.name = name
-        self.phrase = phrase
-        self.hp = hp
+    def __init__(self, **kwargs):
+        self.name = kwargs['name']
+        self.phrase = kwargs['phrase']
+        self.hp = kwargs['hp']
 
     def get_phrase(self):
         return self.phrase
@@ -82,14 +82,14 @@ while (comm := input()):
             if len(options) != 8:
                 print("Invalid arguments")
                 continue
-            param_dir = {}
-            param_dir['name'] = options[0]
+            param_dict = {}
+            param_dict['name'] = options[0]
             opt_set = set()
             i = 1
             while i < len(options):                                             # TODO: can parameters occure twice?
                 match options[i]:
                     case 'hello':
-                        param_dir['phrase'] = options[i+1]
+                        param_dict['phrase'] = options[i+1]
                         opt_set.add('hello')
                         i += 2
                     case 'hp':
@@ -103,7 +103,7 @@ while (comm := input()):
                             print('Invalid arguments')
                             err_flag = True
                             break
-                        param_dir['hp'] = hp
+                        param_dict['hp'] = hp
                         opt_set.add('hp')
                         i += 2
                     case 'coords':
@@ -130,6 +130,6 @@ while (comm := input()):
                 print(6)
                 print('Invalid arguments')
                 continue
-            field.add_monster(x, y, Monster(param_dir['name'], param_dir['phrase'], param_dir['hp']))
+            field.add_monster(x, y, Monster(**param_dict))
         case _:
             print("Invalid command")
