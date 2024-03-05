@@ -1,5 +1,7 @@
 import cowsay
+<<<<<<< HEAD
 import io
+import shlex
 
 
 class Field:
@@ -63,10 +65,11 @@ class Player:
 
 
 class Monster:
-    def __init__(self, name, phrase, custom=False):
+    def __init__(self, name, phrase, hp, custom=False):
         self.phrase = phrase
         self.name = name
         self.custom = custom
+        self.hp = hp
 
     def set_custom(self, val):
         self.custom = val
@@ -99,10 +102,12 @@ $the_cow = <<EOC;
 cows_dict = {'jgsbat': jgsbat}
 
 print("<<< Welcome to Python-MUD 0.1 >>>")
+# Parsing: iterate through parameters and checking
 field = Field()
 player = Player(field)
 while (comm := input()):
-    pars_comm = comm.split()
+    pars_comm = shlex.split(comm)
+    err_flag = False
     match pars_comm:
         case [("up" | "down" | "left" | "right") as side, *options]:
             if len(options) != 0:
@@ -110,20 +115,57 @@ while (comm := input()):
             else:
                 player.make_move(side)
         case ["addmon", *options]:
-            if len(options) != 4:
+            if len(options) != 8:
                 print("Invalid arguments")
-            else:
-                try:
-                    x = int(options[1])
-                    y = int(options[2])
-                except Exception:
-                    print("Invalid arguments")
-                    continue
-                if not (0 <= x <= 9 and 0 <= y <= 9):
-                    print("Invalid arguments")
-                else:
-                    name = options[0]
-                    phrase = options[3]
-                    field.add_monster(int(x), int(y), Monster(name, phrase))
+                continue
+            param_dir = {}
+            param_dir['name'] = options[0]
+            opt_set = set()
+            i = 1
+            while i < len(options):                                             # TODO: can parameters occure twice?
+                match options[i]:
+                    case 'hello':
+                        param_dir['phrase'] = options[i+1]
+                        opt_set.add('hello')
+                        i += 2
+                    case 'hp':
+                        try:
+                            hp = int(options[i+1])
+                        except Exception:
+                            print('Invalid arguments')
+                            err_flag = True
+                            break
+                        if not (hp > 0):
+                            print('Invalid arguments')
+                            err_flag = True
+                            break
+                        param_dir['hp'] = hp
+                        opt_set.add('hp')
+                        i += 2
+                    case 'coords':
+                        try:
+                            x = int(options[i+1])
+                            y = int(options[i+2])
+                        except Exception:
+                            print('Invalid arguments')
+                            err_flag = True
+                            break
+                        if not (0 <= x <= Field.size and 0 <= y <= Field.size):
+                            print('Invalid arguments')
+                            err_flag = True
+                            break
+                        opt_set.add('coords')
+                        i += 3
+                    case _:
+                        print('Invalid arguments')
+                        err_flag = True
+                        continue
+            if err_flag:
+                continue
+            if opt_set != {'hello', 'hp', 'coords'}:
+                print(6)
+                print('Invalid arguments')
+                continue
+            field.add_monster(x, y, Monster(param_dir['name'], param_dir['phrase'], param_dir['hp']))
         case _:
             print("Invalid command")
