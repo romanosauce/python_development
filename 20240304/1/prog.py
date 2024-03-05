@@ -98,6 +98,7 @@ $the_cow = <<EOC;
 
 cows_dict = {'jgsbat': jgsbat}
 
+print("<<< Welcome to Python-MUD 0.1 >>>")
 field = Field()
 player = Player(field)
 while (comm := input()):
