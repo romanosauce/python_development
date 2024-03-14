@@ -1,6 +1,8 @@
 import cowsay
 import io
 import shlex
+import sys
+import cmd
 
 
 class Field:
@@ -83,6 +85,78 @@ class Monster:
         return self.name
 
 
+class MUD_shell(cmd.Cmd):
+    prompt = "python-MUD>> "
+    
+    def do_up(self, arg):
+        player.make_move("up")
+
+    def do_down(self, arg):
+        player.make_move("down")
+
+    def do_right(self, arg):
+        player.make_move("right")
+
+    def do_left(self, arg):
+        player.make_move("left")
+
+    def do_addmon(self, arg):
+        options = shlex.split(arg)
+        if len(options) != 8:
+            print("Invalid arguments")
+            return
+        param_dict = {}
+        param_dict['name'] = options[0]
+        opt_set = set()
+        i = 1
+        err_flag = False
+        while i < len(options):                                             # TODO: can parameters occure twice?
+            match options[i]:
+                case 'hello':
+                    param_dict['phrase'] = options[i+1]
+                    opt_set.add('hello')
+                    i += 2
+                case 'hp':
+                    try:
+                        hp = int(options[i+1])
+                    except Exception:
+                        print('Invalid arguments')
+                        err_flag = True
+                        break
+                    if not (hp > 0):
+                        print('Invalid arguments')
+                        err_flag = True
+                        break
+                    param_dict['hp'] = hp
+                    opt_set.add('hp')
+                    i += 2
+                case 'coords':
+                    try:
+                        x = int(options[i+1])
+                        y = int(options[i+2])
+                    except Exception:
+                        print('Invalid arguments')
+                        err_flag = True
+                        break
+                    if not (0 <= x <= Field.size and 0 <= y <= Field.size):
+                        print('Invalid arguments')
+                        err_flag = True
+                        break
+                    opt_set.add('coords')
+                    i += 3
+                case _:
+                    print('Invalid arguments')
+                    err_flag = True
+                    return
+        if err_flag:
+            return
+        if opt_set != {'hello', 'hp', 'coords'}:
+            print(6)
+            print('Invalid arguments')
+            return
+        field.add_monster(x, y, Monster(**param_dict))
+
+
 jgsbat = cowsay.read_dot_cow(io.StringIO('''
 $the_cow = <<EOC;
          $thoughts
@@ -104,67 +178,7 @@ print("<<< Welcome to Python-MUD 0.1 >>>")
 # Parsing: iterate through parameters and checking
 field = Field()
 player = Player(field)
-while (comm := input()):
-    pars_comm = shlex.split(comm)
-    err_flag = False
-    match pars_comm:
-        case [("up" | "down" | "left" | "right") as side, *options]:
-            if len(options) != 0:
-                print("Invalid arguments")
-            else:
-                player.make_move(side)
-        case ["addmon", *options]:
-            if len(options) != 8:
-                print("Invalid arguments")
-                continue
-            param_dict = {}
-            param_dict['name'] = options[0]
-            opt_set = set()
-            i = 1
-            while i < len(options):                                             # TODO: can parameters occure twice?
-                match options[i]:
-                    case 'hello':
-                        param_dict['phrase'] = options[i+1]
-                        opt_set.add('hello')
-                        i += 2
-                    case 'hp':
-                        try:
-                            hp = int(options[i+1])
-                        except Exception:
-                            print('Invalid arguments')
-                            err_flag = True
-                            break
-                        if not (hp > 0):
-                            print('Invalid arguments')
-                            err_flag = True
-                            break
-                        param_dict['hp'] = hp
-                        opt_set.add('hp')
-                        i += 2
-                    case 'coords':
-                        try:
-                            x = int(options[i+1])
-                            y = int(options[i+2])
-                        except Exception:
-                            print('Invalid arguments')
-                            err_flag = True
-                            break
-                        if not (0 <= x <= Field.size and 0 <= y <= Field.size):
-                            print('Invalid arguments')
-                            err_flag = True
-                            break
-                        opt_set.add('coords')
-                        i += 3
-                    case _:
-                        print('Invalid arguments')
-                        err_flag = True
-                        continue
-            if err_flag:
-                continue
-            if opt_set != {'hello', 'hp', 'coords'}:
-                print(6)
-                print('Invalid arguments')
-                continue
-            field.add_monster(x, y, Monster(**param_dict))
-        case _:
-            print("Invalid command")
+source_file = sys.stdin
+
+if source_file == sys.stdin:
+    MUD_shell().cmdloop()
