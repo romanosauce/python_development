@@ -45,7 +45,6 @@ class Field:
                                     cow=monster.get_name()))
 
 
-
 class Player:
     _dir_dict = {"up": (0, -1), "down": (0, 1),
                  "left": (-1, 0), "right": (1, 0)}
@@ -87,7 +86,7 @@ class Monster:
 
 class MUD_shell(cmd.Cmd):
     prompt = "python-MUD>> "
-    
+
     def do_up(self, arg):
         player.make_move("up")
 
@@ -155,6 +154,9 @@ class MUD_shell(cmd.Cmd):
             print('Invalid arguments')
             return
         field.add_monster(x, y, Monster(**param_dict))
+
+    def do_EOF(self, arg):
+        return 1
 
 
 jgsbat = cowsay.read_dot_cow(io.StringIO('''
