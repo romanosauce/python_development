@@ -71,6 +71,7 @@ class Player:
         pos = (self.x, self.y)
         if pos in self.field.get_monsters_pos():
             monster = self.field.get_monster(pos)
+            damage = damage if monster.get_hp() > damage else monster.get_hp()
             print(f"Attacked {monster.get_name()}"
                   f", damage {damage} hp")
             monster.get_damage(damage)
