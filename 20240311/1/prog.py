@@ -66,6 +66,17 @@ class Player:
         print(f"Moved to ({self.x}, {self.y})")
         self.field.encounter(self.x, self.y)
 
+    def attack(self):
+        damage = 10
+        pos = (self.x, self.y)
+        if pos in self.field.get_monsters_pos():
+            monster = self.field.get_monster(pos)
+            print(f"Attacked {monster.get_name()}"
+                  f", damage {damage} hp")
+            monster.get_damage(damage)
+        else:
+            print("No monster here")
+
 
 class Monster:
     def __init__(self, custom=False, **kwargs):
@@ -170,6 +181,9 @@ class MUD_shell(cmd.Cmd):
             print('Invalid arguments')
             return
         field.add_monster(x, y, Monster(**param_dict))
+
+    def do_attack(self, arg):
+        player.attack()
 
     def do_EOF(self, arg):
         return 1
