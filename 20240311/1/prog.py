@@ -52,10 +52,15 @@ class Player:
     _dir_dict = {"up": (0, -1), "down": (0, 1),
                  "left": (-1, 0), "right": (1, 0)}
 
+    weapons = {"sword": 10, "spear": 15, "axe": 20}
+
     def __init__(self, field):
         self.x = 0
         self.y = 0
         self.field = field
+
+    def get_weapons(self):
+        return self.weapons
 
     def make_move(self, side):
         dirs = self._dir_dict[side]
@@ -66,8 +71,8 @@ class Player:
         print(f"Moved to ({self.x}, {self.y})")
         self.field.encounter(self.x, self.y)
 
-    def attack(self):
-        damage = 10
+    def attack(self, weapon):
+        damage = self.weapons[weapon]
         pos = (self.x, self.y)
         if pos in self.field.get_monsters_pos():
             monster = self.field.get_monster(pos)
@@ -184,7 +189,19 @@ class MUD_shell(cmd.Cmd):
         field.add_monster(x, y, Monster(**param_dict))
 
     def do_attack(self, arg):
-        player.attack()
+        arg = shlex.split(arg)
+        weapon = 'sword'
+        if len(arg) == 0:
+            player.attack(weapon)
+        else:
+            match arg:
+                case ['with', arms]:
+                    if arms not in player.get_weapons():
+                        print("Unknown weapon")
+                    else:
+                        player.attack(arms)
+                case _:
+                    print("Invalid arguments")
 
     def do_EOF(self, arg):
         return 1
