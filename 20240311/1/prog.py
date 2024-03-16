@@ -66,17 +66,18 @@ class Player:
         print(f"Moved to ({self.x}, {self.y})")
         self.field.encounter(self.x, self.y)
 
-    def attack(self):
+    def attack(self, name):
         damage = 10
         pos = (self.x, self.y)
-        if pos in self.field.get_monsters_pos():
+        if (pos in self.field.get_monsters_pos() and
+                self.field.get_monster(pos).get_name() == name):
             monster = self.field.get_monster(pos)
             damage = damage if monster.get_hp() > damage else monster.get_hp()
             print(f"Attacked {monster.get_name()}"
                   f", damage {damage} hp")
             monster.get_damage(damage)
         else:
-            print("No monster here")
+            print(f"No {name} here")
 
 
 class Monster:
@@ -184,10 +185,18 @@ class MUD_shell(cmd.Cmd):
         field.add_monster(x, y, Monster(**param_dict))
 
     def do_attack(self, arg):
-        player.attack()
+        arg = shlex.split(arg)
+        if len(arg) != 1:
+            print("Invalid arguments")
+            return
+        player.attack(arg[0])
 
     def do_EOF(self, arg):
         return 1
+
+    def complete_attack(self, text, line, begidx, endidx):
+        return [c for c in (set(cowsay.list_cows()) | set(cows_dict.keys())) if
+                c.startswith(text)]
 
 
 jgsbat = cowsay.read_dot_cow(io.StringIO('''
