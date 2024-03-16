@@ -71,17 +71,18 @@ class Player:
         print(f"Moved to ({self.x}, {self.y})")
         self.field.encounter(self.x, self.y)
 
-    def attack(self, weapon):
+    def attack(self, name, weapon):
         damage = self.weapons[weapon]
         pos = (self.x, self.y)
-        if pos in self.field.get_monsters_pos():
+        if (pos in self.field.get_monsters_pos() and
+                self.field.get_monster(pos).get_name() == name):
             monster = self.field.get_monster(pos)
             damage = damage if monster.get_hp() > damage else monster.get_hp()
             print(f"Attacked {monster.get_name()}"
                   f", damage {damage} hp")
             monster.get_damage(damage)
         else:
-            print("No monster here")
+            print(f"No {name} here")
 
 
 class Monster:
@@ -191,23 +192,32 @@ class MUD_shell(cmd.Cmd):
     def do_attack(self, arg):
         arg = shlex.split(arg)
         weapon = 'sword'
-        if len(arg) == 0:
-            player.attack(weapon)
-        else:
-            match arg:
+        if len(arg) == 1:
+            player.attack(arg[0], weapon)
+        elif len(arg) == 3:
+            match arg[1:]:
                 case ['with', arms]:
                     if arms not in player.get_weapons():
                         print("Unknown weapon")
                     else:
-                        player.attack(arms)
+                        player.attack(arg[0], arms)
                 case _:
                     print("Invalid arguments")
-
-    def complete_attack(self, text, line, begidx, endidx):
-        return [arm for arm in player.get_weapons() if arm.startswith(text)]
+                    return
+        else:
+            print("Invalid arguments")
+            return
 
     def do_EOF(self, arg):
         return 1
+
+    def complete_attack(self, text, line, begidx, endidx):
+        args = (line[:endidx] + '.').split()
+        if len(args) == 2:
+            return [c for c in (set(cowsay.list_cows()) | set(cows_dict.keys())) if
+                    c.startswith(text)]
+        if len(args) == 4:
+            return [arm for arm in player.get_weapons() if arm.startswith(text)]
 
 
 jgsbat = cowsay.read_dot_cow(io.StringIO('''
