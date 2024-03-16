@@ -27,6 +27,9 @@ class Field:
         else:
             print("Cannot add unknown monster")
 
+    def delete_mon(self, coords):
+        self.monsters_pos.pop(coords)
+
     def get_monster(self, pos):
         return self.monsters_pos[pos]
 
