@@ -203,6 +203,9 @@ class MUD_shell(cmd.Cmd):
                 case _:
                     print("Invalid arguments")
 
+    def complete_attack(self, text, line, begidx, endidx):
+        return [arm for arm in player.get_weapons() if arm.startswith(text)]
+
     def do_EOF(self, arg):
         return 1
 
