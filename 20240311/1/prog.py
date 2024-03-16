@@ -73,6 +73,7 @@ class Monster:
         self.phrase = kwargs['phrase']
         self.hp = kwargs['hp']
         self.custom = custom
+        self.coords = kwargs['coords']
 
     def set_custom(self, val):
         self.custom = val
@@ -85,6 +86,17 @@ class Monster:
 
     def get_name(self):
         return self.name
+
+    def get_hp(self):
+        return self.hp
+
+    def get_damage(self, damage):
+        if damage < self.hp:
+            self.hp -= damage
+            print(f"{self.name} now has {self.hp}")
+        else:
+            print(f"{self.name} died")
+            field.delete_mon(self.coords)
 
 
 class MUD_shell(cmd.Cmd):
@@ -145,6 +157,7 @@ class MUD_shell(cmd.Cmd):
                         err_flag = True
                         break
                     opt_set.add('coords')
+                    param_dict['coords'] = (x, y)
                     i += 3
                 case _:
                     print('Invalid arguments')
