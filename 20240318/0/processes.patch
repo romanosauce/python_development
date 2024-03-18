@@ -1,0 +1,59 @@
+--- processes	2024-03-18 13:08:55.781663003 +0300
++++ processes_new	2024-03-18 13:09:06.113439741 +0300
+@@ -79,7 +79,7 @@
+ root          92       2  0 12:12 ?        00:00:00 [irq/124-aerdrv]
+ root          97       2  0 12:12 ?        00:00:00 [acpi_thermal_pm]
+ root          98       2  0 12:12 ?        00:00:00 [mld]
+-root          99       2  0 12:12 ?        00:00:00 [kworker/4:1H-events_highpri]
++root          99       2  0 12:12 ?        00:00:00 [kworker/4:1H-kblockd]
+ root         100       2  0 12:12 ?        00:00:00 [ipv6_addrconf]
+ root         107       2  0 12:12 ?        00:00:00 [kstrp]
+ root         114       2  0 12:12 ?        00:00:00 [charger_manager]
+@@ -122,7 +122,7 @@
+ root         752       1  0 12:12 ?        00:00:00 ovs-vswitchd unix:/var/run/openvswitch/db.sock -vconsole:emer -vsyslog:err -vfile:info --mlockall --no-chdir --log-file=/var/log/openvswitch/ovs-vswitchd.log --pidfile=/var/run/openvswitch/ovs-vswitchd.pid --detach
+ root         786       1  0 12:12 ?        00:00:00 /usr/libexec/accounts-daemon
+ root         787       1  0 12:12 ?        00:00:00 /usr/sbin/acpid
+-avahi        789       1 13 12:12 ?        00:07:54 avahi-daemon: running [roman-MRC-WX0.local]
++avahi        789       1 13 12:12 ?        00:07:57 avahi-daemon: running [roman-MRC-WX0.local]
+ root         791       1  0 12:12 ?        00:00:00 /usr/lib/bluetooth/bluetoothd
+ root         793       1  0 12:12 ?        00:00:00 /usr/sbin/cron -f -P
+ message+     794       1  0 12:12 ?        00:00:04 @dbus-daemon --system --address=systemd: --nofork --nopidfile --systemd-activation --syslog-only
+@@ -189,7 +189,7 @@
+ roman       1695    1674  0 12:12 ?        00:00:00 /usr/bin/dbus-daemon --config-file=/usr/share/defaults/at-spi2/accessibility.conf --nofork --print-address 11 --address=unix:path=/run/user/1000/at-spi/bus_0
+ roman       1714    1416  0 12:12 ?        00:00:00 /usr/libexec/gnome-session-ctl --monitor
+ roman       1723    1416  0 12:12 ?        00:00:00 /usr/libexec/gnome-session-binary --systemd-service --session=ubuntu
+-roman       1747    1416  4 12:12 ?        00:02:35 /usr/bin/gnome-shell
++roman       1747    1416  4 12:12 ?        00:02:36 /usr/bin/gnome-shell
+ roman       1785    1416  0 12:12 ?        00:00:00 /usr/libexec/gnome-shell-calendar-server
+ roman       1791    1416  0 12:12 ?        00:00:00 /usr/libexec/evolution-source-registry
+ geoclue     1798       1  0 12:12 ?        00:00:01 /usr/libexec/geoclue
+@@ -241,18 +241,18 @@
+ roman       4397    1416  0 12:13 ?        00:00:01 /usr/bin/gnome-calendar --gapplication-service
+ roman       4401    1416  0 12:13 ?        00:00:01 /usr/bin/seahorse --gapplication-service
+ root        5110       2  0 12:17 ?        00:00:02 [kworker/u17:2+i915_flip]
+-root        5113       2  0 12:17 ?        00:00:04 [kworker/6:0-mm_percpu_wq]
++root        5113       2  0 12:17 ?        00:00:04 [kworker/6:0-events]
+ root        5177       2  0 12:18 ?        00:00:00 [kworker/7:0-cgroup_destroy]
+-root        5371       2  0 12:23 ?        00:00:00 [kworker/4:1-i915-unordered]
++root        5371       2  0 12:23 ?        00:00:00 [kworker/4:1-events]
+ root        5662       2  0 12:30 ?        00:00:01 [kworker/0:1-events]
+-root        5770       2  0 12:30 ?        00:00:00 [kworker/u16:23-i915]
+-root        6474       2  0 12:38 ?        00:00:00 [kworker/5:1-events]
++root        5770       2  0 12:30 ?        00:00:00 [kworker/u16:23-events_unbound]
++root        6474       2  0 12:38 ?        00:00:00 [kworker/5:1-i915-unordered]
+ root        6475       2  0 12:38 ?        00:00:00 [kworker/3:1-i915-unordered]
+ root        6476       2  0 12:38 ?        00:00:00 [kworker/3:3-events]
+ root        6487       2  0 12:39 ?        00:00:00 [kworker/1:0-events]
+ root        6490       2  0 12:39 ?        00:00:00 [kworker/7:2-events]
+ root        6495       2  0 12:39 ?        00:00:00 [kworker/u16:18-events_unbound]
+-root        6508       2  0 12:39 ?        00:00:00 [kworker/u16:32-events_power_efficient]
++root        6508       2  0 12:39 ?        00:00:00 [kworker/u16:32-i915]
+ root        7059       2  0 12:50 ?        00:00:00 [irq/128-mei_me]
+ root        7313       2  0 12:51 ?        00:00:00 [kworker/2:0-events]
+ root        7314       2  0 12:52 ?        00:00:00 [kworker/4:0-mm_percpu_wq]
+@@ -271,4 +271,4 @@
+ root        7773       2  0 12:58 ?        00:00:00 [kworker/u16:10-events_unbound]
+ root        7777       2  0 12:58 ?        00:00:00 [kworker/u16:11-events_unbound]
+ root        8048       2  0 13:05 ?        00:00:00 [kworker/u17:1-rb_allocator]
+-roman       8240    3042  0 13:08 pts/0    00:00:00 ps -ef
++roman       8257    3042  0 13:09 pts/0    00:00:00 ps -ef
