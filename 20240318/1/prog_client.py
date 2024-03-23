@@ -25,7 +25,7 @@ def parse_command(line):
             while i < len(options):                                             # TODO: can parameters occure twice?
                 match options[i]:
                     case 'hello':
-                        param_dict['phrase'] = options[i+1]
+                        param_dict['phrase'] = shlex.quote(options[i+1])
                         opt_set.add('hello')
                         i += 2
                     case 'hp':
@@ -55,17 +55,16 @@ def parse_command(line):
             if opt_set != {'hello', 'hp', 'coords'}:
                 raise Exception('Invalid arguments')
             opts = []
-            for opt in 'name', 'coords_x', 'coords_y', 'hello', 'hp':
+            for opt in 'name', 'coords_x', 'coords_y', 'phrase', 'hp':
                 opts.append(str(param_dict[opt]))
             return ("addmon", opts)
         case ['attack', *options]:
-            arg = shlex.split(options)
-            if len(arg) == 1:
-                return ('attack', [arg[0], 'sword'])
-            elif len(arg) == 3:
-                match arg[1:]:
+            if len(options) == 1:
+                return ('attack', [options[0], 'sword'])
+            elif len(options) == 3:
+                match options[1:]:
                     case ['with', arms]:
-                        return ('attack', [arg[0], arms])
+                        return ('attack', [options[0], arms])
                     case _:
                         raise Exception("Invalid arguments")
             else:
@@ -84,24 +83,25 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         except Exception as ex:
             print(ex)
             continue
+        print(b' '.join([command.encode()] + list(map(str.encode, options))).decode())
         s.sendall(b' '.join([command.encode()] + list(map(str.encode, options))))
-        rcv_data = s.recv(1024).rstrip().decode()
-        error, *options = map(bytes.decode, rcv_data.split(b'\x00'))
-        if error == 't':
-            print(options[0].decode())
-            continue
-        match command:
-            case ["up" | "down" | "left" | "right"]:
-                x, y = options[0].split()
-                print(f"Moved to ({x}, {y})")
-                if len(options) == 3:
-                    monster = options[1]
-                    saying = options[2]
-                    cowsay.cowsay(saying, cow=monster)
-            case ['attack']:
-                monster, damage, hp = options[0], options[1], options[2]
-                print(f"Attacked {monster}, damage {damage} hp")
-                if options[2] == '0':
-                    print(f"{monster} died")
-                else:
-                    print(f"{monster} now has {hp}")
+        # rcv_data = s.recv(1024).rstrip()
+        # error, *options = map(bytes.decode, rcv_data.split(b'\x00'))
+        # if error == 't':
+            # print(options[0].decode())
+            # continue
+        # match command:
+            # case ["up" | "down" | "left" | "right"]:
+                # x, y = options[0].split()
+                # print(f"Moved to ({x}, {y})")
+                # if len(options) == 3:
+                    # monster = options[1]
+                    # saying = options[2]
+                    # cowsay.cowsay(saying, cow=monster)
+            # case ['attack']:
+                # monster, damage, hp = options[0], options[1], options[2]
+                # print(f"Attacked {monster}, damage {damage} hp")
+                # if options[2] == '0':
+                    # print(f"{monster} died")
+                # else:
+                    # print(f"{monster} now has {hp}")
