@@ -8,7 +8,6 @@ field_size = 10
 
 def parse_command(line):
     opt = shlex.split(msg.decode())
-    print(opt)
     match opt:
         case [("up" | "down" | "left" | "right") as side, *options]:
             if len(options) != 0:
@@ -83,25 +82,33 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         except Exception as ex:
             print(ex)
             continue
-        print(b' '.join([command.encode()] + list(map(str.encode, options))).decode())
         s.sendall(b' '.join([command.encode()] + list(map(str.encode, options))))
-        # rcv_data = s.recv(1024).rstrip()
-        # error, *options = map(bytes.decode, rcv_data.split(b'\x00'))
-        # if error == 't':
-            # print(options[0].decode())
-            # continue
-        # match command:
-            # case ["up" | "down" | "left" | "right"]:
-                # x, y = options[0].split()
-                # print(f"Moved to ({x}, {y})")
-                # if len(options) == 3:
-                    # monster = options[1]
-                    # saying = options[2]
-                    # cowsay.cowsay(saying, cow=monster)
-            # case ['attack']:
-                # monster, damage, hp = options[0], options[1], options[2]
-                # print(f"Attacked {monster}, damage {damage} hp")
-                # if options[2] == '0':
-                    # print(f"{monster} died")
-                # else:
-                    # print(f"{monster} now has {hp}")
+        rcv_data = s.recv(1024).rstrip()
+        error, *options = map(bytes.decode, rcv_data.split(b'\x00'))
+        if error == 't':
+            print(options[0])
+            continue
+        match command:
+            case "up" | "down" | "left" | "right":
+                x, y = options[0].split()
+                print(f"Moved to ({x}, {y})")
+                if len(options) == 3:
+                    monster = options[1]
+                    saying = options[2]
+                    print(cowsay.cowsay(saying, cow=monster))
+            case 'attack':
+                monster, damage, hp = options[0], options[1], options[2]
+                print(f"Attacked {monster}, damage {damage} hp")
+                if options[2] == '0':
+                    print(f"{monster} died")
+                else:
+                    print(f"{monster} now has {hp}")
+            case 'addmon':
+                x, y = options[1].split()
+                name = options[0]
+                phrase = options[2]
+                print(f"Added monster {name} to ({x}, {y}) saying {phrase}")
+                if len(options) == 4:
+                    print(options[3])
+            case _:
+                print("Error with server response")

@@ -43,10 +43,8 @@ class Field:
         return self.monsters_pos.keys()
 
     def encounter(self, x, y):
-        print('abcd')
         pos = (x, y)
         if pos in self.get_monsters_pos():
-            print('efgh')
             text = msg_queue.pop()
             monster = self.get_monster(pos)
             if not monster.get_custom():
@@ -127,7 +125,6 @@ class Monster:
 
 class MUD_shell(cmd.Cmd):
     def do_up(self, arg):
-        print("1234")
         player.make_move("up")
 
     def do_down(self, arg):
