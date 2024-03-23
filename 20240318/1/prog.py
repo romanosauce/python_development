@@ -184,7 +184,6 @@ class MUD_shell(cmd.Cmd):
         if err_flag:
             return
         if opt_set != {'hello', 'hp', 'coords'}:
-            print(6)
             print('Invalid arguments')
             return
         field.add_monster(x, y, Monster(**param_dict))
