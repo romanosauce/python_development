@@ -1,0 +1,103 @@
+From afff14fb3155d6f46768e946c806ed2bb9d48de7 Mon Sep 17 00:00:00 2001
+From: Roman Danilov <romanosauce.code@gmail.com>
+Date: Sun, 24 Mar 2024 01:14:24 +0300
+Subject: [PATCH 5/6] Add features for client MUD
+
+---
+ 20240318/1/prog_client.py | 51 ++++++++++++++++++++++-----------------
+ 20240318/1/prog_server.py |  3 ---
+ 2 files changed, 29 insertions(+), 25 deletions(-)
+
+diff --git a/20240318/1/prog_client.py b/20240318/1/prog_client.py
+index 3f9d330..13591bf 100644
+--- a/20240318/1/prog_client.py
++++ b/20240318/1/prog_client.py
+@@ -8,7 +8,6 @@ field_size = 10
+ 
+ def parse_command(line):
+     opt = shlex.split(msg.decode())
+-    print(opt)
+     match opt:
+         case [("up" | "down" | "left" | "right") as side, *options]:
+             if len(options) != 0:
+@@ -83,25 +82,33 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+         except Exception as ex:
+             print(ex)
+             continue
+-        print(b' '.join([command.encode()] + list(map(str.encode, options))).decode())
+         s.sendall(b' '.join([command.encode()] + list(map(str.encode, options))))
+-        # rcv_data = s.recv(1024).rstrip()
+-        # error, *options = map(bytes.decode, rcv_data.split(b'\x00'))
+-        # if error == 't':
+-            # print(options[0].decode())
+-            # continue
+-        # match command:
+-            # case ["up" | "down" | "left" | "right"]:
+-                # x, y = options[0].split()
+-                # print(f"Moved to ({x}, {y})")
+-                # if len(options) == 3:
+-                    # monster = options[1]
+-                    # saying = options[2]
+-                    # cowsay.cowsay(saying, cow=monster)
+-            # case ['attack']:
+-                # monster, damage, hp = options[0], options[1], options[2]
+-                # print(f"Attacked {monster}, damage {damage} hp")
+-                # if options[2] == '0':
+-                    # print(f"{monster} died")
+-                # else:
+-                    # print(f"{monster} now has {hp}")
++        rcv_data = s.recv(1024).rstrip()
++        error, *options = map(bytes.decode, rcv_data.split(b'\x00'))
++        if error == 't':
++            print(options[0])
++            continue
++        match command:
++            case "up" | "down" | "left" | "right":
++                x, y = options[0].split()
++                print(f"Moved to ({x}, {y})")
++                if len(options) == 3:
++                    monster = options[1]
++                    saying = options[2]
++                    print(cowsay.cowsay(saying, cow=monster))
++            case 'attack':
++                monster, damage, hp = options[0], options[1], options[2]
++                print(f"Attacked {monster}, damage {damage} hp")
++                if options[2] == '0':
++                    print(f"{monster} died")
++                else:
++                    print(f"{monster} now has {hp}")
++            case 'addmon':
++                x, y = options[1].split()
++                name = options[0]
++                phrase = options[2]
++                print(f"Added monster {name} to ({x}, {y}) saying {phrase}")
++                if len(options) == 4:
++                    print(options[3])
++            case _:
++                print("Error with server response")
+diff --git a/20240318/1/prog_server.py b/20240318/1/prog_server.py
+index c9d960e..79be351 100644
+--- a/20240318/1/prog_server.py
++++ b/20240318/1/prog_server.py
+@@ -43,10 +43,8 @@ class Field:
+         return self.monsters_pos.keys()
+ 
+     def encounter(self, x, y):
+-        print('abcd')
+         pos = (x, y)
+         if pos in self.get_monsters_pos():
+-            print('efgh')
+             text = msg_queue.pop()
+             monster = self.get_monster(pos)
+             if not monster.get_custom():
+@@ -127,7 +125,6 @@ class Monster:
+ 
+ class MUD_shell(cmd.Cmd):
+     def do_up(self, arg):
+-        print("1234")
+         player.make_move("up")
+ 
+     def do_down(self, arg):
+-- 
+2.34.1
+
