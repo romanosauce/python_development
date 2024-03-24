@@ -50,7 +50,7 @@ class Field:
             if not monster.get_custom():
                 text += f"\x00{monster.get_name()}\x00{monster.get_phrase()}"
             else:
-                text = "t\x00You encountered a cunstom monster. You are lucky!"
+                text = "t\x00You encountered a custom monster. You are lucky!"
             msg_queue.append(text)
 
 
