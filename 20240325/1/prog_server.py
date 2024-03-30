@@ -3,11 +3,6 @@ import io
 import shlex
 import sys
 import cmd
-import socket
-from collections import deque
-
-msg_queue = deque()
-err_flag = False
 
 
 class Field:
@@ -26,12 +21,11 @@ class Field:
             if (x, y) in self.monsters_pos:
                 subst = True
             self.monsters_pos[(x, y)] = monster
-            text = f"f\x00{monster.get_name()}\x00{x} {y}\x00{monster.get_phrase()}"
+            print(f"Added monster {monster.get_name()} to ({x}, {y}) saying {monster.get_phrase()}")
             if subst:
-                text += "\x00Replaced the old monster"
-            msg_queue.append(text)
+                print("Replaced the old monster")
         else:
-            msg_queue.append("t\x00Cannot add unknown monster")
+            print("Cannot add unknown monster")
 
     def delete_mon(self, coords):
         self.monsters_pos.pop(coords)
@@ -45,13 +39,13 @@ class Field:
     def encounter(self, x, y):
         pos = (x, y)
         if pos in self.get_monsters_pos():
-            text = msg_queue.pop()
             monster = self.get_monster(pos)
-            if not monster.get_custom():
-                text += f"\x00{monster.get_name()}\x00{monster.get_phrase()}"
+            if monster.get_custom():
+                print(cowsay.cowsay(monster.get_phrase(),
+                                    cowfile=cows_dict[monster.get_name()]))
             else:
-                text = "t\x00You encountered a custom monster. You are lucky!"
-            msg_queue.append(text)
+                print(cowsay.cowsay(monster.get_phrase(),
+                                    cow=monster.get_name()))
 
 
 class Player:
@@ -74,7 +68,7 @@ class Player:
         self.y += dirs[1]
         self.x %= Field.size
         self.y %= Field.size
-        msg_queue.append(f"f\x00{self.x} {self.y}")
+        print(f"Moved to ({self.x}, {self.y})")
         self.field.encounter(self.x, self.y)
 
     def attack(self, name, weapon):
@@ -84,11 +78,11 @@ class Player:
                 self.field.get_monster(pos).get_name() == name):
             monster = self.field.get_monster(pos)
             damage = damage if monster.get_hp() > damage else monster.get_hp()
-            msg_queue.append(f"f\x00{monster.get_name()}\x00"
-                  f"{damage}")
+            print(f"Attacked {monster.get_name()}"
+                  f", damage {damage} hp")
             monster.get_damage(damage)
         else:
-            msg_queue.append(f"t\x00No {name} here")
+            print(f"No {name} here")
 
 
 class Monster:
@@ -115,15 +109,17 @@ class Monster:
         return self.hp
 
     def get_damage(self, damage):
-        text = msg_queue.pop()
-        self.hp -= damage
-        if self.hp == 0:
+        if damage < self.hp:
+            self.hp -= damage
+            print(f"{self.name} now has {self.hp}")
+        else:
+            print(f"{self.name} died")
             field.delete_mon(self.coords)
-        text += f"\x00{self.hp}"
-        msg_queue.append(text)
 
 
 class MUD_shell(cmd.Cmd):
+    prompt = "python-MUD>> "
+
     def do_up(self, arg):
         player.make_move("up")
 
@@ -138,16 +134,90 @@ class MUD_shell(cmd.Cmd):
 
     def do_addmon(self, arg):
         options = shlex.split(arg)
+        if len(options) != 8:
+            print("Invalid arguments")
+            return
         param_dict = {}
         param_dict['name'] = options[0]
-        param_dict['coords'] = (int(options[1]), int(options[2]))
-        param_dict['phrase'] = options[3]
-        param_dict['hp'] = int(options[4])
-        field.add_monster(int(options[1]), int(options[2]), Monster(**param_dict))
+        opt_set = set()
+        i = 1
+        err_flag = False
+        while i < len(options):                                             # TODO: can parameters occure twice?
+            match options[i]:
+                case 'hello':
+                    param_dict['phrase'] = options[i+1]
+                    opt_set.add('hello')
+                    i += 2
+                case 'hp':
+                    try:
+                        hp = int(options[i+1])
+                    except Exception:
+                        print('Invalid arguments')
+                        err_flag = True
+                        break
+                    if not (hp > 0):
+                        print('Invalid arguments')
+                        err_flag = True
+                        break
+                    param_dict['hp'] = hp
+                    opt_set.add('hp')
+                    i += 2
+                case 'coords':
+                    try:
+                        x = int(options[i+1])
+                        y = int(options[i+2])
+                    except Exception:
+                        print('Invalid arguments')
+                        err_flag = True
+                        break
+                    if not (0 <= x <= Field.size and 0 <= y <= Field.size):
+                        print('Invalid arguments')
+                        err_flag = True
+                        break
+                    opt_set.add('coords')
+                    param_dict['coords'] = (x, y)
+                    i += 3
+                case _:
+                    print('Invalid arguments')
+                    err_flag = True
+                    return
+        if err_flag:
+            return
+        if opt_set != {'hello', 'hp', 'coords'}:
+            print(6)
+            print('Invalid arguments')
+            return
+        field.add_monster(x, y, Monster(**param_dict))
 
     def do_attack(self, arg):
-        options = shlex.split(arg)
-        player.attack(options[0], options[1])
+        arg = shlex.split(arg)
+        weapon = 'sword'
+        if len(arg) == 1:
+            player.attack(arg[0], weapon)
+        elif len(arg) == 3:
+            match arg[1:]:
+                case ['with', arms]:
+                    if arms not in player.get_weapons():
+                        print("Unknown weapon")
+                    else:
+                        player.attack(arg[0], arms)
+                case _:
+                    print("Invalid arguments")
+                    return
+        else:
+            print("Invalid arguments")
+            return
+
+    def do_EOF(self, arg):
+        return 1
+
+    def complete_attack(self, text, line, begidx, endidx):
+        args = (line[:endidx] + '.').split()
+        if len(args) == 2:
+            return [c for c in (set(cowsay.list_cows()) | set(cows_dict.keys())) if
+                    c.startswith(text)]
+        if len(args) == 4:
+            return [arm for arm in player.get_weapons() if arm.startswith(text)]
 
 
 jgsbat = cowsay.read_dot_cow(io.StringIO('''
@@ -167,26 +237,11 @@ $the_cow = <<EOC;
 
 cows_dict = {'jgsbat': jgsbat}
 
+print("<<< Welcome to Python-MUD 0.1 >>>")
 # Parsing: iterate through parameters and checking
 field = Field()
 player = Player(field)
 source_file = sys.stdin
 
-shell = MUD_shell()
-# if source_file == sys.stdin:
-    # shell.cmdloop()
-HOST = 'localhost'
-PORT = 1337
-with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    s.bind((HOST, PORT))
-    s.listen(1)
-    conn, addr = s.accept()
-    with conn:
-        print('Connected by', addr)
-        while True:
-            data = conn.recv(1024).decode()
-            if not data:
-                break
-            shell.onecmd(data)
-            conn.sendall(msg_queue.popleft().encode())
+if source_file == sys.stdin:
+    MUD_shell().cmdloop()
