@@ -25,9 +25,9 @@ class Field:
                 subst = True
             self.monsters_pos[(x, y)] = monster
             msg = f"{clients[id][0]} added monster {monster.get_name()} to ({x}, {y}) saying {monster.get_phrase()}"
-            broadcast_queue.put_nowait(msg)
+            broadcast_queue[id].put_nowait(msg)
             if subst:
-                broadcast_queue.put_nowait("Replaced the old monster")
+                broadcast_queue[id].put_nowait("Replaced the old monster")
         else:
             clients_queue[id].put_nowait("Cannot add unknown monster")
 
@@ -86,8 +86,8 @@ class Player:
             monster = self.field.get_monster(pos)
             damage = damage if monster.get_hp() > damage else monster.get_hp()
             msg = f"{self.name} attacked {monster.get_name()} with {weapon}\ncausing {damage} hp damage"
-            broadcast_queue.put_nowait(msg)
-            monster.get_damage(damage)
+            broadcast_queue[self.id].put_nowait(msg)
+            monster.get_damage(damage, self.id)
         else:
             clients_queue[self.id].put_nowait(f"No {name} here")
 
@@ -115,12 +115,12 @@ class Monster:
     def get_hp(self):
         return self.hp
 
-    def get_damage(self, damage):
+    def get_damage(self, damage, id):
         if damage < self.hp:
             self.hp -= damage
-            broadcast_queue.put_nowait(f"{self.name} now has {self.hp}")
+            broadcast_queue[id].put_nowait(f"{self.name} now has {self.hp}")
         else:
-            broadcast_queue.put_nowait(f"{self.name} died")
+            broadcast_queue[id].put_nowait(f"{self.name} died")
             field.delete_mon(self.coords)
 
 
@@ -243,16 +243,17 @@ field = Field()
 clients = {}                        # client_id to client's login and Player class
 clients_names = set()
 clients_queue = {}                  # client_id to client_queue
-broadcast_queue = asyncio.Queue()
+broadcast_queue = {}
 
 
 async def play(reader, writer):
     client_id = "{}:{}".format(*writer.get_extra_info('peername'))
     print(client_id)
     clients_queue[client_id] = asyncio.Queue()
+    broadcast_queue[client_id] = asyncio.Queue()
     receive_data_from_client = asyncio.create_task(reader.readline())
     write_data_to_client = asyncio.create_task(clients_queue[client_id].get())
-    broadcast_task = asyncio.create_task(broadcast_queue.get())
+    broadcast_task = asyncio.create_task(broadcast_queue[client_id].get())
     await writer.drain()
 
     login_name, pending = await asyncio.wait([receive_data_from_client],
@@ -262,7 +263,7 @@ async def play(reader, writer):
         clients[client_id] = [name, Player(field, client_id, name)]
         clients_names.add(name)
         msg = f"{name} has joined the field"
-        await broadcast_queue.put(msg)
+        await broadcast_queue[client_id].put(msg)
     else:
         msg = f"You are an impostor, {name}!\nGet outta here"
         writer.write(msg.encode())
@@ -282,7 +283,6 @@ async def play(reader, writer):
                 data = q.result().decode().strip()
                 try:
                     shell.onecmd(data)
-                    print(broadcast_queue.empty())
                 except Exception:
                     await clients_queue[client_id].put("Something wrong with command")
             elif q is write_data_to_client:
@@ -291,10 +291,9 @@ async def play(reader, writer):
                 writer.write((data).encode())
             elif q is broadcast_task:
                 data = q.result()
-                while not broadcast_queue.empty():
-                    data += ' ' + broadcast_queue.get_nowait()
-                print("I have data to broadcast", data)
-                broadcast_task = asyncio.create_task(broadcast_queue.get())
+                while not broadcast_queue[client_id].empty():
+                    data += ' ' + broadcast_queue[client_id].get_nowait()
+                broadcast_task = asyncio.create_task(broadcast_queue[client_id].get())
                 for id in clients:
                     queue = clients_queue[id]
                     await queue.put(data)
