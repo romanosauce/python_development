@@ -92,6 +92,7 @@ class Player:
             clients_queue[self.id].put_nowait(f"No {name} here")
 
     def sayall(self, msg):
+        msg = f"{clients[self.id][0]}: {msg}"
         broadcast_queue[self.id].put_nowait(msg)
 
 
