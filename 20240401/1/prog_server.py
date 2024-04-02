@@ -301,9 +301,18 @@ async def play(reader, writer):
                     data += ' ' + broadcast_queue[client_id].get_nowait()
                 broadcast_task = asyncio.create_task(broadcast_queue[client_id].get())
                 for id in clients:
-                    queue = clients_queue[id]
-                    await queue.put(data)
+                    client_queue = clients_queue[id]
+                    await client_queue.put(data)
             await writer.drain()
+
+    receive_data_from_client.cancel()
+    write_data_to_client.cancel()
+    broadcast_task.cancel()
+    del clients_queue[client_id]
+    del clients[client_id]
+    clients_names.remove(clients[client_id])
+    writer.close()
+    await writer.wait_closed()
 
 
 async def main():
