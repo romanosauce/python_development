@@ -305,12 +305,13 @@ async def play(reader, writer):
                     await client_queue.put(data)
             await writer.drain()
 
+    print(f"{name} disconnected")
     receive_data_from_client.cancel()
     write_data_to_client.cancel()
     broadcast_task.cancel()
+    clients_names.remove(clients[client_id][0])
     del clients_queue[client_id]
     del clients[client_id]
-    clients_names.remove(clients[client_id])
     writer.close()
     await writer.wait_closed()
 
