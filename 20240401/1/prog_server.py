@@ -91,6 +91,9 @@ class Player:
         else:
             clients_queue[self.id].put_nowait(f"No {name} here")
 
+    def sayall(self, msg):
+        broadcast_queue[self.id].put_nowait(msg)
+
 
 class Monster:
     def __init__(self, custom=False, **kwargs):
@@ -216,6 +219,9 @@ class MUD_shell(cmd.Cmd):
         else:
             clients_queue[self.id].put_nowait("Invalid arguments")
             return
+
+    def do_sayall(self, arg):
+        self.player.sayall(arg)
 
     def do_EOF(self, arg):
         return 1
