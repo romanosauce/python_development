@@ -49,6 +49,9 @@ class Field:
                                     cow=monster.get_name())
             clients_queue[id].put_nowait(msg)
 
+    def wandering_monster(self):
+        pass
+
 
 class Player:
     _dir_dict = {"up": (0, -1), "down": (0, 1),
