@@ -1,5 +1,3 @@
-import sys
-import threading
 import socket
 import readline
 
