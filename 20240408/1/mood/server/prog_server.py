@@ -66,6 +66,9 @@ class Player:
     def get_weapons(self):
         return self.weapons
 
+    def get_id(self):
+        return self.id
+
     def make_move(self, side):
         dirs = self._dir_dict[side]
         self.x += dirs[0]
@@ -126,9 +129,9 @@ class Monster:
 
 
 class MUD_shell(cmd.Cmd):
-    def __init__(self, player_info):
-        self.player = player_info[1]
-        self.id = player_info[0]
+    def __init__(self, player: Player):
+        self.player = player
+        self.id = player.get_id()
 
     def do_up(self, arg):
         self.player.make_move("up")
@@ -264,7 +267,7 @@ async def play(reader, writer):
                                              return_when=asyncio.FIRST_COMPLETED)
     name = login_name.pop().result().decode().strip()
     if name not in clients_names:
-        clients[client_id] = [name, Player(field, client_id, name)]
+        clients[client_id] = Player(field, client_id, name)
         clients_names.add(name)
         msg = f"{name} has joined the field"
         await broadcast_queue[client_id].put(msg)
@@ -274,14 +277,14 @@ async def play(reader, writer):
         receive_data_from_client.cancel()
         write_data_to_client.cancel()
         broadcast_task.cancel()
-        clients_names.remove(clients[client_id][0])
+        clients_names.remove(name)
         del clients_queue[client_id]
         del clients[client_id]
         writer.close()
         await writer.wait_closed()
         return
 
-    shell = MUD_shell((client_id, clients[client_id][1]))
+    shell = MUD_shell(clients[client_id])
 
     receive_data_from_client = asyncio.create_task(reader.readline())
     while not reader.at_eof():
@@ -315,7 +318,7 @@ async def play(reader, writer):
     receive_data_from_client.cancel()
     write_data_to_client.cancel()
     broadcast_task.cancel()
-    clients_names.remove(clients[client_id][0])
+    clients_names.remove(name)
     del clients_queue[client_id]
     del clients[client_id]
     writer.close()
