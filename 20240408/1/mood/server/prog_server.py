@@ -271,6 +271,14 @@ async def play(reader, writer):
     else:
         msg = f"You are an impostor, {name}!\nGet outta here"
         writer.write(msg.encode())
+        receive_data_from_client.cancel()
+        write_data_to_client.cancel()
+        broadcast_task.cancel()
+        clients_names.remove(clients[client_id][0])
+        del clients_queue[client_id]
+        del clients[client_id]
+        writer.close()
+        await writer.wait_closed()
         return
 
     shell = MUD_shell((client_id, clients[client_id][1]))
