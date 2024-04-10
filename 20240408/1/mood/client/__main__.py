@@ -1,4 +1,4 @@
-import prog_client
+from . import prog_client
 import sys
 import socket
 import threading

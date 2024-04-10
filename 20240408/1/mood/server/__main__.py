@@ -1,4 +1,4 @@
-import prog_server
+from . import prog_server
 import asyncio
 
 
