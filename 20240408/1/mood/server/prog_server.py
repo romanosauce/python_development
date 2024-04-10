@@ -3,6 +3,7 @@ import io
 import shlex
 import cmd
 import asyncio
+import random
 
 
 class Field:
@@ -50,7 +51,29 @@ class Field:
             clients_queue[id].put_nowait(msg)
 
     def wandering_monster(self):
-        pass
+        monsters_pos = list(self.get_monsters_pos())
+        if monsters_pos:
+            chosed_monster_coords = random.choice(monsters_pos)
+            chosed_monster_x, chosed_monster_y = chosed_monster_coords
+            side, chosed_dir = random.choice(list(Player._dir_dict.items()))
+            chosed_dir_x, chosed_dir_y = chosed_dir
+            new_mon_coords = ((chosed_monster_x+chosed_dir_x) % self.size,
+                              (chosed_monster_y+chosed_dir_y) % self.size)
+            while new_mon_coords in monsters_pos:
+                chosed_monster_coords = random.choice(monsters_pos)
+                chosed_monster_x, chosed_monster_y = chosed_monster_coords
+                side, chosed_dir = random.choice(list(Player._dir_dict.items()))
+                chosed_dir_x, chosed_dir_y = chosed_dir
+                new_mon_coords = ((chosed_monster_x+chosed_dir_x) % self.size,
+                                  (chosed_monster_y+chosed_dir_y) % self.size)
+            monster = self.get_monster(chosed_monster_coords)
+            self.delete_mon(chosed_monster_coords)
+            self.monsters_pos[new_mon_coords] = monster
+            msg = f"{monster.get_name()} moved to {new_mon_coords}"
+            # msg = f"{monster.get_name()} moved one cell {side}"
+            for client_id in clients:
+                clients_queue[client_id].put_nowait(msg)
+                self.encounter(*clients[client_id].get_coords(), client_id)
 
 
 class Player:
@@ -74,6 +97,9 @@ class Player:
 
     def get_id(self):
         return self.id
+
+    def get_coords(self):
+        return (self.x, self.y)
 
     def make_move(self, side):
         dirs = self._dir_dict[side]
@@ -203,7 +229,6 @@ class MUD_shell(cmd.Cmd):
         if err_flag:
             return
         if opt_set != {'hello', 'hp', 'coords'}:
-            print(6)
             clients_queue[self.id].put_nowait('Invalid arguments')
             return
         field.add_monster(x, y, Monster(**param_dict), self.id)
@@ -261,7 +286,7 @@ broadcast_queue = {}
 
 async def play(reader, writer):
     client_id = "{}:{}".format(*writer.get_extra_info('peername'))
-    print(client_id)
+    print("LOG: new client connected with id", client_id)
     clients_queue[client_id] = asyncio.Queue()
     broadcast_queue[client_id] = asyncio.Queue()
     receive_data_from_client = asyncio.create_task(reader.readline())
@@ -305,23 +330,25 @@ async def play(reader, writer):
                 try:
                     shell.onecmd(data)
                 except Exception as e:
-                    print(e)
+                    print("LOG: while handling user's command exception occure\n", e)
                     await clients_queue[client_id].put("Something wrong with command")
             elif q is write_data_to_client:
-                write_data_to_client = asyncio.create_task(clients_queue[client_id].get())
                 data = q.result()
+                while not clients_queue[client_id].empty():
+                    data += '\n' + clients_queue[client_id].get_nowait()
+                write_data_to_client = asyncio.create_task(clients_queue[client_id].get())
                 writer.write((data).encode())
             elif q is broadcast_task:
                 data = q.result()
                 while not broadcast_queue[client_id].empty():
-                    data += ' ' + broadcast_queue[client_id].get_nowait()
+                    data += '\n' + broadcast_queue[client_id].get_nowait()
                 broadcast_task = asyncio.create_task(broadcast_queue[client_id].get())
                 for id in clients:
                     client_queue = clients_queue[id]
                     await client_queue.put(data)
             await writer.drain()
 
-    print(f"{name} disconnected")
+    print(f"LOG: {name} disconnected")
     receive_data_from_client.cancel()
     write_data_to_client.cancel()
     broadcast_task.cancel()
@@ -332,7 +359,17 @@ async def play(reader, writer):
     await writer.wait_closed()
 
 
+async def moving_monster_daemon():
+    while True:
+        print("LOG: invoked daemon for moving monsters")
+        field.wandering_monster()
+        await asyncio.sleep(10)
+
+
 async def main():
+    print("LOG: starting server")
     server = await asyncio.start_server(play, '0.0.0.0', 1337)
+    daemon = asyncio.create_task(moving_monster_daemon())
+    await asyncio.sleep(0)
     async with server:
         await server.serve_forever()
