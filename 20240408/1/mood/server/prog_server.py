@@ -21,7 +21,7 @@ class Field:
             if (x, y) in self.monsters_pos:
                 subst = True
             self.monsters_pos[(x, y)] = monster
-            msg = f"{clients[id][0]} added monster {monster.get_name()} to ({x}, {y}) saying {monster.get_phrase()}"
+            msg = f"{clients[id].get_name()} added monster {monster.get_name()} to ({x}, {y}) saying {monster.get_phrase()}"
             broadcast_queue[id].put_nowait(msg)
             if subst:
                 broadcast_queue[id].put_nowait("Replaced the old monster")
@@ -69,6 +69,9 @@ class Player:
     def get_weapons(self):
         return self.weapons
 
+    def get_name(self):
+        return self.name
+
     def get_id(self):
         return self.id
 
@@ -95,7 +98,7 @@ class Player:
             clients_queue[self.id].put_nowait(f"No {name} here")
 
     def sayall(self, msg):
-        msg = f"{clients[self.id][0]}: {msg}"
+        msg = f"{self.name}: {msg}"
         broadcast_queue[self.id].put_nowait(msg)
 
 
@@ -250,7 +253,7 @@ cows_dict = {'jgsbat': jgsbat}
 
 field = Field()
 
-clients = {}                        # client_id to client's login and Player class
+clients = {}                        # client_id to client's Player class
 clients_names = set()
 clients_queue = {}                  # client_id to client_queue
 broadcast_queue = {}
@@ -301,7 +304,8 @@ async def play(reader, writer):
                 data = q.result().decode().strip()
                 try:
                     shell.onecmd(data)
-                except Exception:
+                except Exception as e:
+                    print(e)
                     await clients_queue[client_id].put("Something wrong with command")
             elif q is write_data_to_client:
                 write_data_to_client = asyncio.create_task(clients_queue[client_id].get())
