@@ -1,3 +1,4 @@
+"""Start server."""
 from . import prog_server
 import asyncio
 

@@ -1,3 +1,5 @@
+"""Module for starting client and print received data in parallel."""
+
 from . import prog_client
 import sys
 import socket

@@ -1,9 +1,18 @@
+"""Functions for receive messages in parallel."""
+
 import socket
 import readline
 
 
 # https://stackoverflow.com/questions/48024720/python-how-to-check-if-socket-is-still-connected
 def is_socket_closed(sock: socket.socket) -> bool:
+    """
+    Determine whether the socket is closed.
+
+    Parameters:
+        sock : socket
+            socket to check it's availability
+    """
     try:
         # this will try to read bytes without blocking and also without removing them from buffer (peek only)
         data = sock.recv(16, socket.MSG_DONTWAIT | socket.MSG_PEEK)
@@ -19,6 +28,18 @@ def is_socket_closed(sock: socket.socket) -> bool:
 
 
 def msg_reciever(socket, prompt):
+    """
+    Receive message and output it.
+
+    If user starts writing input but didn't press enter,
+    output this input after a message
+
+    Parameters:
+        socket : socket
+            socket to listen from
+        prompt : str
+            print this prompt after the message
+    """
     while True:
         if is_socket_closed(socket):
             print("Server is down")

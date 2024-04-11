@@ -1,3 +1,4 @@
+"""Main logic for managing connections and handling user commands."""
 import cowsay
 import io
 import shlex
@@ -6,14 +7,41 @@ import asyncio
 import random
 
 
+TIME_INTERVAL_FOR_MOVING_MONSTER = 30
+
+
 class Field:
+    """
+    A main class with implementation of game logic.
+
+    It is used to represent dungeon field with players and monsters
+    Stores monsters' positions, adds and deletets monster to a field
+
+    Attributes
+    ----------
+    size : int
+        number of cells in the field
+    """
+
     size = 10
 
     def __init__(self):
+        """Initialize empty Field object."""
         self.field = [[0 for i in range(self.size)] for j in range(self.size)]
         self.monsters_pos = {}
 
     def add_monster(self, x, y, monster, id):
+        """
+        Add monster to a field.
+
+        Parameters:
+            x, y : int
+                coordinates of monster
+            monster : Monster
+                Monster object representing a monster
+            id : str
+                identifier of client who added monster
+        """
         if monster.get_name() in cowsay.list_cows() or \
                 monster.get_name() in cows_dict:
             if monster.get_name() in cows_dict:
@@ -30,15 +58,39 @@ class Field:
             clients_queue[id].put_nowait("Cannot add unknown monster")
 
     def delete_mon(self, coords):
+        """
+        Delete monster from a field.
+
+        Parameters:
+            coords : tuple(int, int)
+                coords of monster
+        """
         self.monsters_pos.pop(coords)
 
     def get_monster(self, pos):
+        """
+        Get monster from a field.
+
+        Parameters:
+            coords : tuple(int, int)
+                coords where add monster
+        """
         return self.monsters_pos[pos]
 
     def get_monsters_pos(self):
+        """Return key_dict with positions of all monsters."""
         return self.monsters_pos.keys()
 
     def encounter(self, x, y, id):
+        """
+        If player move to a cell with monster, send player a notification.
+
+        Parameters:
+            x, y : int
+                coordinates of player
+            id : str
+                identifier of client who meets monster
+        """
         pos = (x, y)
         if pos in self.get_monsters_pos():
             monster = self.get_monster(pos)
@@ -51,6 +103,11 @@ class Field:
             clients_queue[id].put_nowait(msg)
 
     def wandering_monster(self):
+        """
+        Move random monster per TIME_INTERVAL_FOR_MOVING_MONSTER secоnds interval.
+
+        If monster ended up in a cell with clients, send them a notification
+        """
         monsters_pos = list(self.get_monsters_pos())
         if monsters_pos:
             chosed_monster_coords = random.choice(monsters_pos)
@@ -77,12 +134,34 @@ class Field:
 
 
 class Player:
+    """
+    Class representing a player who interacts with field, monsters and other users.
+
+    Attributes
+    ----------
+    _dir_dict : dict
+        mapping direction name to changes of coordinates
+    weapons : dict
+        available weapons for user's attack
+    """
+
     _dir_dict = {"up": (0, -1), "down": (0, 1),
                  "left": (-1, 0), "right": (1, 0)}
 
     weapons = {"sword": 10, "spear": 15, "axe": 20}
 
     def __init__(self, field, id, name):
+        """
+        Initialize empty Player object.
+
+        Parameters:
+            field : Field
+                Field object where to place the player
+            id : str
+                identifier of client associated with player
+            name : str
+                client's login
+        """
         self.x = 0
         self.y = 0
         self.field = field
@@ -90,18 +169,29 @@ class Player:
         self.name = name
 
     def get_weapons(self):
+        """Return available weapons."""
         return self.weapons
 
     def get_name(self):
+        """Return client's login."""
         return self.name
 
     def get_id(self):
+        """Return client's id."""
         return self.id
 
     def get_coords(self):
+        """Return player's current coordinates."""
         return (self.x, self.y)
 
     def make_move(self, side):
+        """
+        Move player on the field in some direction.
+
+        Parameters:
+            side : str
+                name of the side (up, down, left, right)
+        """
         dirs = self._dir_dict[side]
         self.x += dirs[0]
         self.y += dirs[1]
@@ -111,6 +201,17 @@ class Player:
         self.field.encounter(self.x, self.y, self.id)
 
     def attack(self, name, weapon):
+        """
+        Perform attack on monster.
+
+        If no monster is in the cell where the player is, send notification
+
+        Parameters:
+            name : str
+                name of the monster being attacked
+            weapon : str
+                weapon used for an attack
+        """
         damage = self.weapons[weapon]
         pos = (self.x, self.y)
         if (pos in self.field.get_monsters_pos() and
@@ -124,12 +225,35 @@ class Player:
             clients_queue[self.id].put_nowait(f"No {name} here")
 
     def sayall(self, msg):
+        """
+        Send message to all users on the field.
+
+        Parameters:
+            msg : str
+                message to send
+        """
         msg = f"{self.name}: {msg}"
         broadcast_queue[self.id].put_nowait(msg)
 
 
 class Monster:
+    """Class representing monster on the field."""
+
     def __init__(self, custom=False, **kwargs):
+        """
+        Initialize empty Monster object.
+
+        Parameters:
+            custom : boolean
+                specify if monster is custom, that is defined in other place
+            kwargs : dict with info about monster
+                'name' : monster name, must be correct name of default monsters
+                    or name of custom defined monster
+                'pharse' : message which is being send to client while he
+                    meets monster in the field
+                'coords' : coordinates where the monster should be placed
+                'hp' : health points of the monster
+        """
         self.name = kwargs['name']
         self.phrase = kwargs['phrase']
         self.hp = kwargs['hp']
@@ -137,21 +261,31 @@ class Monster:
         self.coords = kwargs['coords']
 
     def set_custom(self, val):
+        """Set if this monster is custom monster."""
         self.custom = val
 
     def get_custom(self):
+        """Return custom flag of the monster."""
         return self.custom
 
     def get_phrase(self):
+        """Return monster's phrase."""
         return self.phrase
 
     def get_name(self):
+        """Return monster's name."""
         return self.name
 
     def get_hp(self):
+        """Return monster's hp."""
         return self.hp
 
     def get_damage(self, damage, id):
+        """
+        Make monster get damage from the player.
+
+        If after attack monster has 0 hp, deletes monster from the field
+        """
         if damage < self.hp:
             self.hp -= damage
             broadcast_queue[id].put_nowait(f"{self.name} now has {self.hp}")
@@ -161,23 +295,41 @@ class Monster:
 
 
 class MUD_shell(cmd.Cmd):
+    """Class which inherits cmd.Cmd to parse and process commands from the user."""
+
     def __init__(self, player: Player):
+        """
+        Initialize empty MUD_shell object associated with client.
+
+        Parameters:
+            player : Player
+                Player object with whom this class instance is associated
+        """
         self.player = player
         self.id = player.get_id()
 
     def do_up(self, arg):
+        """Process 'up' command."""
         self.player.make_move("up")
 
     def do_down(self, arg):
+        """Process 'down' command."""
         self.player.make_move("down")
 
     def do_right(self, arg):
+        """Process 'right' command."""
         self.player.make_move("right")
 
     def do_left(self, arg):
+        """Process 'left' command."""
         self.player.make_move("left")
 
     def do_addmon(self, arg):
+        """
+        Process 'addmon' command.
+
+        And check correctness of given arguments
+        """
         options = shlex.split(arg)
         if len(options) != 8:
             clients_queue[self.id].put_nowait("Invalid arguments")
@@ -234,6 +386,7 @@ class MUD_shell(cmd.Cmd):
         field.add_monster(x, y, Monster(**param_dict), self.id)
 
     def do_attack(self, arg):
+        """Process 'attack' command."""
         arg = shlex.split(arg)
         weapon = 'sword'
         if len(arg) == 1:
@@ -253,9 +406,11 @@ class MUD_shell(cmd.Cmd):
             return
 
     def do_sayall(self, arg):
+        """Process 'sayall' command."""
         self.player.sayall(arg)
 
     def do_EOF(self, arg):
+        """If EOF is seen, return 1."""
         return 1
 
 
@@ -285,6 +440,13 @@ broadcast_queue = {}
 
 
 async def play(reader, writer):
+    """
+    When another player has connected, this function is invoked.
+
+    Register client, check if given login is unique, create asyncio tasks
+    for sending, receiving and broadcasting data
+    When connection is lost, delete all data associated with left client
+    """
     client_id = "{}:{}".format(*writer.get_extra_info('peername'))
     print("LOG: new client connected with id", client_id)
     clients_queue[client_id] = asyncio.Queue()
@@ -360,6 +522,7 @@ async def play(reader, writer):
 
 
 async def moving_monster_daemon():
+    """Daemon which invokes field.wandering_monster for moving one random monster."""
     while True:
         print("LOG: invoked daemon for moving monsters")
         field.wandering_monster()
@@ -367,6 +530,7 @@ async def moving_monster_daemon():
 
 
 async def main():
+    """Create server, start daemon."""
     print("LOG: starting server")
     server = await asyncio.start_server(play, '0.0.0.0', 1337)
     daemon = asyncio.create_task(moving_monster_daemon())
