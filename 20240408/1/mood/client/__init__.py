@@ -9,9 +9,8 @@ def is_socket_closed(sock: socket.socket) -> bool:
     """
     Determine whether the socket is closed.
 
-    Parameters:
-        sock : socket
-            socket to check it's availability
+    :param sock: socket to check it's availability
+    :type sock: :class:`socket.socket`
     """
     try:
         # this will try to read bytes without blocking and also without removing them from buffer (peek only)
@@ -34,11 +33,10 @@ def msg_reciever(socket, prompt):
     If user starts writing input but didn't press enter,
     output this input after a message
 
-    Parameters:
-        socket : socket
-            socket to listen from
-        prompt : str
-            print this prompt after the message
+    :param socket: socket to listen on
+    :param prompt: print this prompt after the message
+    :type socket: :class:`socket.socket`
+    :type prompt: str
     """
     while True:
         if is_socket_closed(socket):

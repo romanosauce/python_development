@@ -14,19 +14,14 @@ class Field:
     """
     A main class with implementation of game logic.
 
-    It is used to represent dungeon field with players and monsters
+    It is used to represent dungeon field with players and monsters.
     Stores monsters' positions, adds and deletets monster to a field
-
-    Attributes
-    ----------
-    size : int
-        number of cells in the field
     """
 
-    size = 10
+    size: int = 10
+    """Width (in cells) of the field."""
 
     def __init__(self):
-        """Initialize empty Field object."""
         self.field = [[0 for i in range(self.size)] for j in range(self.size)]
         self.monsters_pos = {}
 
@@ -34,13 +29,12 @@ class Field:
         """
         Add monster to a field.
 
-        Parameters:
-            x, y : int
-                coordinates of monster
-            monster : Monster
-                Monster object representing a monster
-            id : str
-                identifier of client who added monster
+        :param x: x coordinate
+        :type x: int
+        :param y: y coordinate
+        :type y: int
+        :param monster: Monster object representing a monster
+        :type monster: :class:`Monster`
         """
         if monster.get_name() in cowsay.list_cows() or \
                 monster.get_name() in cows_dict:
@@ -61,9 +55,8 @@ class Field:
         """
         Delete monster from a field.
 
-        Parameters:
-            coords : tuple(int, int)
-                coords of monster
+        :param coords: coordinates of monster to delete
+        :type coords: tuple(int, int)
         """
         self.monsters_pos.pop(coords)
 
@@ -71,25 +64,26 @@ class Field:
         """
         Get monster from a field.
 
-        Parameters:
-            coords : tuple(int, int)
-                coords where add monster
+        :param pos: coords where monster should be added
+        :type pos: tuple(int, int)
+        :return: instance of :class:`Monster` from cell
         """
         return self.monsters_pos[pos]
 
     def get_monsters_pos(self):
-        """Return key_dict with positions of all monsters."""
+        """:return: `key_dict` with positions of all monsters."""
         return self.monsters_pos.keys()
 
     def encounter(self, x, y, id):
         """
         If player move to a cell with monster, send player a notification.
 
-        Parameters:
-            x, y : int
-                coordinates of player
-            id : str
-                identifier of client who meets monster
+        :param x: x coordinate of player
+        :param y: y coordinate of player
+        :param id: identifier of client who meets monster
+        :type x: int
+        :type y: int
+        :type id: str
         """
         pos = (x, y)
         if pos in self.get_monsters_pos():
@@ -135,33 +129,24 @@ class Field:
 
 class Player:
     """
-    Class representing a player who interacts with field, monsters and other users.
+    Class representing a player who interacts with field, monsters and other users
 
-    Attributes
-    ----------
-    _dir_dict : dict
-        mapping direction name to changes of coordinates
-    weapons : dict
-        available weapons for user's attack
+    :param field: :class:`Field` object where to place the player
+    :type field: :class:`Field`
+    :param id: identifier of client associated with player
+    :type id: str
+    :param name: client's login
+    :type name: str
     """
 
     _dir_dict = {"up": (0, -1), "down": (0, 1),
                  "left": (-1, 0), "right": (1, 0)}
+    """Mapping direction name to changes of coordinates."""
 
     weapons = {"sword": 10, "spear": 15, "axe": 20}
+    """Available weapons for user's attack."""
 
     def __init__(self, field, id, name):
-        """
-        Initialize empty Player object.
-
-        Parameters:
-            field : Field
-                Field object where to place the player
-            id : str
-                identifier of client associated with player
-            name : str
-                client's login
-        """
         self.x = 0
         self.y = 0
         self.field = field
@@ -169,28 +154,27 @@ class Player:
         self.name = name
 
     def get_weapons(self):
-        """Return available weapons."""
+        """:return: available weapons."""
         return self.weapons
 
     def get_name(self):
-        """Return client's login."""
+        """:return: client's login."""
         return self.name
 
     def get_id(self):
-        """Return client's id."""
+        """:return: client's id."""
         return self.id
 
     def get_coords(self):
-        """Return player's current coordinates."""
+        """:return: player's current coordinates."""
         return (self.x, self.y)
 
     def make_move(self, side):
         """
         Move player on the field in some direction.
 
-        Parameters:
-            side : str
-                name of the side (up, down, left, right)
+        :param side: name of the side (up, down, left, right)
+        :type side: str
         """
         dirs = self._dir_dict[side]
         self.x += dirs[0]
@@ -206,11 +190,10 @@ class Player:
 
         If no monster is in the cell where the player is, send notification
 
-        Parameters:
-            name : str
-                name of the monster being attacked
-            weapon : str
-                weapon used for an attack
+        :param name: name of the monster being attacked
+        :type name: str
+        :param weapon: weapon used for an attack
+        :type weapon: str
         """
         damage = self.weapons[weapon]
         pos = (self.x, self.y)
@@ -228,16 +211,29 @@ class Player:
         """
         Send message to all users on the field.
 
-        Parameters:
-            msg : str
-                message to send
+        :param msg: message to send
+        :type msg: str
         """
         msg = f"{self.name}: {msg}"
         broadcast_queue[self.id].put_nowait(msg)
 
 
 class Monster:
-    """Class representing monster on the field."""
+    """
+    Class representing monster on the field.
+
+    :param custom: specify if monster is custom, that is defined in other place
+    :type custom: boolean
+    :param kwargs: dict with info about monster
+
+                - 'name' : monster name, must be correct name of default monsters or name of custom defined monster
+
+                - 'pharse' : message which is being send to client while he meets monster in the field
+
+                - 'coords' : coordinates where the monster should be placed
+
+                - 'hp' : health points of the monster
+    """
 
     def __init__(self, custom=False, **kwargs):
         """
@@ -265,19 +261,19 @@ class Monster:
         self.custom = val
 
     def get_custom(self):
-        """Return custom flag of the monster."""
+        """:return: custom flag of the monster."""
         return self.custom
 
     def get_phrase(self):
-        """Return monster's phrase."""
+        """:return: monster's phrase."""
         return self.phrase
 
     def get_name(self):
-        """Return monster's name."""
+        """:return: monster's name."""
         return self.name
 
     def get_hp(self):
-        """Return monster's hp."""
+        """:return: monster's hp."""
         return self.hp
 
     def get_damage(self, damage, id):
@@ -295,16 +291,14 @@ class Monster:
 
 
 class MUD_shell(cmd.Cmd):
-    """Class which inherits cmd.Cmd to parse and process commands from the user."""
+    """
+    Class which inherits :class:`cmd.Cmd` to parse and process commands from the user.
+
+    :param player: :class:`Player` object with whom this class instance is associated
+    :type player: :class:`Player`
+    """
 
     def __init__(self, player: Player):
-        """
-        Initialize empty MUD_shell object associated with client.
-
-        Parameters:
-            player : Player
-                Player object with whom this class instance is associated
-        """
         self.player = player
         self.id = player.get_id()
 
