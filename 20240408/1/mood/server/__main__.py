@@ -1,6 +1,6 @@
 """Start server."""
-from . import prog_server
+from . import main
 import asyncio
 
 
-asyncio.run(prog_server.main())
+asyncio.run(main)
