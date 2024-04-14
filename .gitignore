@@ -1,2 +1,3 @@
 # ignoring build files
 build
+*.mood
