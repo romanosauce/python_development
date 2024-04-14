@@ -43,7 +43,11 @@ def msg_reciever(socket, prompt):
             print("Server is down")
             quit(1)
             break
-        msg = socket.recv(1024).decode()
+        try:
+            msg = socket.recv(1024).decode()
+        except Exception as e:
+            print("Socket is now closed\nExiting...")
+            quit()
         buf = readline.get_line_buffer()
         if buf:
             print(f"\n{msg}\n{prompt}{buf}", end="",
