@@ -516,7 +516,7 @@ async def play(reader, writer):
 
 
 async def moving_monster_daemon():
-    """Daemon which invokes field.wandering_monster for moving one random monster."""
+    """Daemon which invokes :meth:`Field.wandering_monster` for moving one random monster."""
     while True:
         print("LOG: invoked daemon for moving monsters")
         field.wandering_monster()
