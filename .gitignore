@@ -1,3 +1,6 @@
 # ignoring build files
 build
+#ignoring scripting files
 *.mood
+#ignoring compiled translations
+*.mo
