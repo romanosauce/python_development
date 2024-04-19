@@ -38,6 +38,12 @@ def get_custom_monster_names():
 
 
 def get_cowsay_msg(monster_name, msg):
+    """
+    :param monster_name: name of monster
+    :type monster_name: str
+    :param msg: message for cowsay
+    :type msg: str
+    """
     if monster_name in get_custom_monster_names():
         return cowsay.cowsay(msg, cowfile=cows_dict[monster_name])
     else:
