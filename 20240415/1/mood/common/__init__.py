@@ -34,3 +34,11 @@ def get_custom_monster_names():
     """
     :return: list with names of custom monsters
     """
+    return list(cows_dict)
+
+
+def get_cowsay_msg(monster_name, msg):
+    if monster_name in get_custom_monster_names():
+        return cowsay.cowsay(msg, cowfile=cows_dict[monster_name])
+    else:
+        return cowsay.cowsay(msg, cow=monster_name)

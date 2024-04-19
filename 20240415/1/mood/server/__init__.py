@@ -5,6 +5,8 @@ import shlex
 import cmd
 import asyncio
 import random
+from .common import (get_all_monster_names,
+                     get_cowsay_msg)
 
 
 TIME_INTERVAL_FOR_MOVING_MONSTER = 30
@@ -41,10 +43,7 @@ class Field:
         :param monster: Monster object representing a monster
         :type monster: :class:`Monster`
         """
-        if monster.get_name() in cowsay.list_cows() or \
-                monster.get_name() in cows_dict:
-            if monster.get_name() in cows_dict:
-                monster.set_custom(True)
+        if monster.get_name() in get_all_monster_names():
             subst = False
             if (x, y) in self.monsters_pos:
                 subst = True
@@ -93,12 +92,7 @@ class Field:
         pos = (x, y)
         if pos in self.get_monsters_pos():
             monster = self.get_monster(pos)
-            if monster.get_custom():
-                msg = cowsay.cowsay(monster.get_phrase(),
-                                    cowfile=cows_dict[monster.get_name()])
-            else:
-                msg = cowsay.cowsay(monster.get_phrase(),
-                                    cow=monster.get_name())
+            msg = get_cowsay_msg(monster.get_name())
             await clients_queue[id].put(msg)
 
     async def wandering_monster(self):
@@ -240,13 +234,11 @@ class Monster:
                 - 'hp' : health points of the monster
     """
 
-    def __init__(self, custom=False, **kwargs):
+    def __init__(self,  **kwargs):
         """
         Initialize empty Monster object.
 
         Parameters:
-            custom : boolean
-                specify if monster is custom, that is defined in other place
             kwargs : dict with info about monster
                 'name' : monster name, must be correct name of default monsters
                     or name of custom defined monster
@@ -258,16 +250,7 @@ class Monster:
         self.name = kwargs['name']
         self.phrase = kwargs['phrase']
         self.hp = kwargs['hp']
-        self.custom = custom
         self.coords = kwargs['coords']
-
-    def set_custom(self, val):
-        """Set if this monster is custom monster."""
-        self.custom = val
-
-    def get_custom(self):
-        """:return: custom flag of the monster."""
-        return self.custom
 
     def get_phrase(self):
         """:return: monster's phrase."""
