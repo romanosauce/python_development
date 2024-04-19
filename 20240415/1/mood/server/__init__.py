@@ -10,6 +10,11 @@ import random
 TIME_INTERVAL_FOR_MOVING_MONSTER = 30
 
 
+async def put_broadcast(msg):
+    for client_id in clients:
+        await clients_queue[client_id].put(msg)
+
+
 class Field:
     """
     A main class with implementation of game logic.
@@ -25,7 +30,7 @@ class Field:
         self.field = [[0 for i in range(self.size)] for j in range(self.size)]
         self.monsters_pos = {}
 
-    def add_monster(self, x, y, monster, id):
+    async def add_monster(self, x, y, monster, id):
         """
         Add monster to a field.
 
@@ -45,11 +50,11 @@ class Field:
                 subst = True
             self.monsters_pos[(x, y)] = monster
             msg = f"{clients[id].get_name()} added monster {monster.get_name()} to ({x}, {y}) saying {monster.get_phrase()}"
-            broadcast_queue[id].put_nowait(msg)
             if subst:
-                broadcast_queue[id].put_nowait("Replaced the old monster")
+                msg += "\nReplaced the old monster"
+            await put_broadcast(msg)
         else:
-            clients_queue[id].put_nowait("Cannot add unknown monster")
+            await clients_queue[id].put("Cannot add unknown monster")
 
     def delete_mon(self, coords):
         """
@@ -74,7 +79,7 @@ class Field:
         """:return: `key_dict` with positions of all monsters."""
         return self.monsters_pos.keys()
 
-    def encounter(self, x, y, id):
+    async def encounter(self, x, y, id):
         """
         If player move to a cell with monster, send player a notification.
 
@@ -94,9 +99,9 @@ class Field:
             else:
                 msg = cowsay.cowsay(monster.get_phrase(),
                                     cow=monster.get_name())
-            clients_queue[id].put_nowait(msg)
+            await clients_queue[id].put(msg)
 
-    def wandering_monster(self):
+    async def wandering_monster(self):
         """
         Move random monster per TIME_INTERVAL_FOR_MOVING_MONSTER secоnds interval.
 
@@ -123,8 +128,8 @@ class Field:
             msg = f"{monster.get_name()} moved to {new_mon_coords}"
             # msg = f"{monster.get_name()} moved one cell {side}"
             for client_id in clients:
-                clients_queue[client_id].put_nowait(msg)
-                self.encounter(*clients[client_id].get_coords(), client_id)
+                await clients_queue[client_id].put(msg)
+                await self.encounter(*clients[client_id].get_coords(), client_id)
 
 
 class Player:
@@ -169,7 +174,7 @@ class Player:
         """:return: player's current coordinates."""
         return (self.x, self.y)
 
-    def make_move(self, side):
+    async def make_move(self, side):
         """
         Move player on the field in some direction.
 
@@ -181,10 +186,10 @@ class Player:
         self.y += dirs[1]
         self.x %= Field.size
         self.y %= Field.size
-        clients_queue[self.id].put_nowait(f"Moved to ({self.x}, {self.y})")
-        self.field.encounter(self.x, self.y, self.id)
+        await clients_queue[self.id].put(f"Moved to ({self.x}, {self.y})")
+        await self.field.encounter(self.x, self.y, self.id)
 
-    def attack(self, name, weapon):
+    async def attack(self, name, weapon):
         """
         Perform attack on monster.
 
@@ -202,12 +207,12 @@ class Player:
             monster = self.field.get_monster(pos)
             damage = damage if monster.get_hp() > damage else monster.get_hp()
             msg = f"{self.name} attacked {monster.get_name()} with {weapon}\ncausing {damage} hp damage"
-            broadcast_queue[self.id].put_nowait(msg)
-            monster.get_damage(damage, self.id)
+            await put_broadcast(msg)
+            await monster.get_damage(damage, self.id)
         else:
-            clients_queue[self.id].put_nowait(f"No {name} here")
+            await clients_queue[self.id].put(f"No {name} here")
 
-    def sayall(self, msg):
+    async def sayall(self, msg):
         """
         Send message to all users on the field.
 
@@ -215,7 +220,7 @@ class Player:
         :type msg: str
         """
         msg = f"{self.name}: {msg}"
-        broadcast_queue[self.id].put_nowait(msg)
+        await put_broadcast(msg)
 
 
 class Monster:
@@ -276,7 +281,7 @@ class Monster:
         """:return: monster's hp."""
         return self.hp
 
-    def get_damage(self, damage, id):
+    async def get_damage(self, damage, id):
         """
         Make monster get damage from the player.
 
@@ -284,9 +289,9 @@ class Monster:
         """
         if damage < self.hp:
             self.hp -= damage
-            broadcast_queue[id].put_nowait(f"{self.name} now has {self.hp}")
+            await put_broadcast(f"{self.name} now has {self.hp}")
         else:
-            broadcast_queue[id].put_nowait(f"{self.name} died")
+            await put_broadcast(f"{self.name} died")
             field.delete_mon(self.coords)
 
 
@@ -302,23 +307,23 @@ class MUD_shell(cmd.Cmd):
         self.player = player
         self.id = player.get_id()
 
-    def do_up(self, arg):
+    async def do_up(self, arg):
         """Process 'up' command."""
-        self.player.make_move("up")
+        await self.player.make_move("up")
 
-    def do_down(self, arg):
+    async def do_down(self, arg):
         """Process 'down' command."""
-        self.player.make_move("down")
+        await self.player.make_move("down")
 
-    def do_right(self, arg):
+    async def do_right(self, arg):
         """Process 'right' command."""
-        self.player.make_move("right")
+        await self.player.make_move("right")
 
-    def do_left(self, arg):
+    async def do_left(self, arg):
         """Process 'left' command."""
-        self.player.make_move("left")
+        await self.player.make_move("left")
 
-    def do_addmon(self, arg):
+    async def do_addmon(self, arg):
         """
         Process 'addmon' command.
 
@@ -326,7 +331,7 @@ class MUD_shell(cmd.Cmd):
         """
         options = shlex.split(arg)
         if len(options) != 8:
-            clients_queue[self.id].put_nowait("Invalid arguments")
+            await clients_queue[self.id].put("Invalid arguments")
             return
         param_dict = {}
         param_dict['name'] = options[0]
@@ -343,11 +348,11 @@ class MUD_shell(cmd.Cmd):
                     try:
                         hp = int(options[i+1])
                     except Exception:
-                        clients_queue[self.id].put_nowait('Invalid arguments')
+                        await clients_queue[self.id].put('Invalid arguments')
                         err_flag = True
                         break
                     if not (hp > 0):
-                        clients_queue[self.id].put_nowait('Invalid arguments')
+                        await clients_queue[self.id].put('Invalid arguments')
                         err_flag = True
                         break
                     param_dict['hp'] = hp
@@ -358,79 +363,61 @@ class MUD_shell(cmd.Cmd):
                         x = int(options[i+1])
                         y = int(options[i+2])
                     except Exception:
-                        clients_queue[self.id].put_nowait('Invalid arguments')
+                        await clients_queue[self.id].put('Invalid arguments')
                         err_flag = True
                         break
                     if not (0 <= x <= Field.size and 0 <= y <= Field.size):
-                        clients_queue[self.id].put_nowait('Invalid arguments')
+                        await clients_queue[self.id].put('Invalid arguments')
                         err_flag = True
                         break
                     opt_set.add('coords')
                     param_dict['coords'] = (x, y)
                     i += 3
                 case _:
-                    clients_queue[self.id].put_nowait('Invalid arguments')
+                    await clients_queue[self.id].put('Invalid arguments')
                     err_flag = True
                     return
         if err_flag:
             return
         if opt_set != {'hello', 'hp', 'coords'}:
-            clients_queue[self.id].put_nowait('Invalid arguments')
+            await clients_queue[self.id].put('Invalid arguments')
             return
-        field.add_monster(x, y, Monster(**param_dict), self.id)
+        await field.add_monster(x, y, Monster(**param_dict), self.id)
 
-    def do_attack(self, arg):
+    async def do_attack(self, arg):
         """Process 'attack' command."""
         arg = shlex.split(arg)
         weapon = 'sword'
         if len(arg) == 1:
-            self.player.attack(arg[0], weapon)
+            await self.player.attack(arg[0], weapon)
         elif len(arg) == 3:
             match arg[1:]:
                 case ['with', arms]:
                     if arms not in self.player.get_weapons():
-                        clients_queue[self.id].put_nowait("Unknown weapon")
+                        await clients_queue[self.id].put("Unknown weapon")
                     else:
-                        self.player.attack(arg[0], arms)
+                        await self.player.attack(arg[0], arms)
                 case _:
-                    clients_queue[self.id].put_nowait("Invalid arguments")
+                    await clients_queue[self.id].put("Invalid arguments")
                     return
         else:
-            clients_queue[self.id].put_nowait("Invalid arguments")
+            await clients_queue[self.id].put("Invalid arguments")
             return
 
-    def do_sayall(self, arg):
+    async def do_sayall(self, arg):
         """Process 'sayall' command."""
-        self.player.sayall(arg)
+        await self.player.sayall(arg)
 
     def do_EOF(self, arg):
         """If EOF is seen, return 1."""
         return 1
 
 
-jgsbat = cowsay.read_dot_cow(io.StringIO('''
-$the_cow = <<EOC;
-         $thoughts
-          $thoughts
-    ,_                    _,
-    ) '-._  ,_    _,  _.-' (
-    )  _.-'.|\\\\--//|.'-._  (
-     )'   .'\/o\/o\/'.   `(
-      ) .' . \====/ . '. (
-       )  / <<    >> \  (
-        '-._/``  ``\_.-'
-  jgs     __\\\\'--'//__
-         (((""`  `"")))EOC
-'''))
-
-cows_dict = {'jgsbat': jgsbat}
-
 field = Field()
 
 clients = {}                        # client_id to client's Player class
 clients_names = set()
 clients_queue = {}                  # client_id to client_queue
-broadcast_queue = {}
 
 
 async def play(reader, writer):
@@ -444,10 +431,8 @@ async def play(reader, writer):
     client_id = "{}:{}".format(*writer.get_extra_info('peername'))
     print("LOG: new client connected with id", client_id)
     clients_queue[client_id] = asyncio.Queue()
-    broadcast_queue[client_id] = asyncio.Queue()
     receive_data_from_client = asyncio.create_task(reader.readline())
     write_data_to_client = asyncio.create_task(clients_queue[client_id].get())
-    broadcast_task = asyncio.create_task(broadcast_queue[client_id].get())
     await writer.drain()
 
     login_name, pending = await asyncio.wait([receive_data_from_client],
@@ -457,13 +442,12 @@ async def play(reader, writer):
         clients[client_id] = Player(field, client_id, name)
         clients_names.add(name)
         msg = f"{name} has joined the field"
-        await broadcast_queue[client_id].put(msg)
+        await put_broadcast(msg)
     else:
         msg = f"You are an impostor, {name}!\nGet outta here"
         writer.write(msg.encode())
         receive_data_from_client.cancel()
         write_data_to_client.cancel()
-        broadcast_task.cancel()
         clients_names.remove(name)
         del clients_queue[client_id]
         del clients[client_id]
@@ -476,8 +460,7 @@ async def play(reader, writer):
     receive_data_from_client = asyncio.create_task(reader.readline())
     while not reader.at_eof():
         done, pending = await asyncio.wait([receive_data_from_client,
-                                            write_data_to_client,
-                                            broadcast_task],
+                                            write_data_to_client],
                                            return_when=asyncio.FIRST_COMPLETED)
         for q in done:
             if q is receive_data_from_client:
@@ -488,26 +471,17 @@ async def play(reader, writer):
                 except Exception as e:
                     print("LOG: while handling user's command exception occure\n", e)
                     await clients_queue[client_id].put("Something wrong with command")
-            elif q is write_data_to_client:
+            else:
                 data = q.result()
                 while not clients_queue[client_id].empty():
                     data += '\n' + clients_queue[client_id].get_nowait()
                 write_data_to_client = asyncio.create_task(clients_queue[client_id].get())
                 writer.write((data).encode())
-            elif q is broadcast_task:
-                data = q.result()
-                while not broadcast_queue[client_id].empty():
-                    data += '\n' + broadcast_queue[client_id].get_nowait()
-                broadcast_task = asyncio.create_task(broadcast_queue[client_id].get())
-                for id in clients:
-                    client_queue = clients_queue[id]
-                    await client_queue.put(data)
             await writer.drain()
 
     print(f"LOG: {name} disconnected")
     receive_data_from_client.cancel()
     write_data_to_client.cancel()
-    broadcast_task.cancel()
     clients_names.remove(name)
     del clients_queue[client_id]
     del clients[client_id]
@@ -519,7 +493,7 @@ async def moving_monster_daemon():
     """Daemon which invokes :meth:`Field.wandering_monster` for moving one random monster."""
     while True:
         print("LOG: invoked daemon for moving monsters")
-        field.wandering_monster()
+        await field.wandering_monster()
         await asyncio.sleep(10)
 
 

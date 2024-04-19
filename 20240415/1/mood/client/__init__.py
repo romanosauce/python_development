@@ -2,6 +2,7 @@
 
 import socket
 import readline
+import shlex
 
 
 # https://stackoverflow.com/questions/48024720/python-how-to-check-if-socket-is-still-connected
