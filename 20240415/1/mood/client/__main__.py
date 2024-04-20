@@ -1,13 +1,10 @@
 """Module for starting client and print received data in parallel."""
 
-from . import msg_reciever
+from . import msg_reciever, MUD_shell, READ_FROM_FILE_TIMEOUT
 import sys
 import socket
 import threading
 import time
-
-
-READ_FROM_FILE_TIMEOUT = 3
 
 
 host = "localhost"
@@ -36,11 +33,9 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     s.sendall((sys.argv[1]+'\n').encode())
     if from_file:
         with open(file_name, 'r') as f:
-            for cmd in f:
-                s.sendall(cmd.encode())
-                time.sleep(READ_FROM_FILE_TIMEOUT)
-
+            shell = MUD_shell(s, timeout=READ_FROM_FILE_TIMEOUT, stdin=f)
+            shell.use_rawinput = False
+            shell.cmdloop()
     else:
-        while True:
-            cmd = input()
-            s.sendall((cmd+'\n').encode())
+        shell = MUD_shell(s)
+    shell.cmdloop()

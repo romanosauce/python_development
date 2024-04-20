@@ -1,8 +1,143 @@
-"""Functions for receive messages in parallel."""
+"""Methods for client work"""
 
 import socket
 import readline
 import shlex
+import cmd
+import time
+from ..common import get_weapons, get_all_monster_names
+
+
+prompt = ">>> "
+FIELD_SIZE = 10
+READ_FROM_FILE_TIMEOUT = 3
+
+
+class MUD_shell(cmd.Cmd):
+    """
+    Class which inherits :class:`cmd.Cmd` to parse and process commands from the user.
+    """
+    def __init__(self, socket, timeout=0, *args, **kwargs):
+        self.socket = socket
+        self.timeout = timeout
+        self.prompt = ""
+        super().__init__(*args, **kwargs)
+
+    def precmd(self, line):
+        time.sleep(self.timeout)
+        return super().precmd(line)
+
+    def do_up(self, arg):
+        """Process 'up' command."""
+        self.socket.sendall("move 0 -1\n".encode())
+
+    def do_down(self, arg):
+        """Process 'down' command."""
+        self.socket.sendall("move 0 1\n".encode())
+
+    def do_left(self, arg):
+        """Process 'left' command."""
+        self.socket.sendall("move -1 0\n".encode())
+
+    def do_right(self, arg):
+        """Process 'right' command."""
+        self.socket.sendall("move 1 0 \n".encode())
+
+    def do_addmon(self, arg):
+        """
+        Process 'addmon' command.
+
+        And check correctness of given arguments
+        """
+        options = shlex.split(arg)
+        if len(options) != 8:
+            print(f"Invalid arguments amount\n{prompt}", end='')
+            return
+        param_dict = {}
+        param_dict['name'] = options[0]
+        opt_set = set()
+        i = 1
+        err_flag = False
+        while i < len(options):                                             # TODO: can parameters occure twice?
+            match options[i]:
+                case 'hello':
+                    param_dict['phrase'] = options[i+1]
+                    opt_set.add('hello')
+                    i += 2
+                case 'hp':
+                    try:
+                        hp = int(options[i+1])
+                    except Exception:
+                        print(f"Invalid hp\n{prompt}", end='')
+                        err_flag = True
+                        break
+                    if not (hp > 0):
+                        print(f"Invalid hp\n{prompt}", end='')
+                        err_flag = True
+                        break
+                    param_dict['hp'] = hp
+                    opt_set.add('hp')
+                    i += 2
+                case 'coords':
+                    try:
+                        x = int(options[i+1])
+                        y = int(options[i+2])
+                    except Exception:
+                        print(f"Invalid coords\n{prompt}", end='')
+                        err_flag = True
+                        break
+                    if not (0 <= x <= FIELD_SIZE and 0 <= y <= FIELD_SIZE):
+                        print(f"Invalid coords\n{prompt}", end='')
+                        err_flag = True
+                        break
+                    opt_set.add('coords')
+                    param_dict['coords_x'] = x
+                    param_dict['coords_y'] = y
+                    i += 3
+                case _:
+                    print(f"Invalid arguments\n{prompt}", end='')
+                    err_flag = True
+                    return
+        if err_flag:
+            return
+        if opt_set != {'hello', 'hp', 'coords'}:
+            print(f"Missing required arguments\n{prompt}", end='')
+            return
+        opts = 'addmon'
+        for opt in 'name', 'coords_x', 'coords_y', 'phrase', 'hp':
+            opts += ' ' + str(param_dict[opt])
+        self.socket.sendall((opts+'\n').encode())
+
+    def do_attack(self, arg):
+        """Process 'attack' command."""
+        arg = shlex.split(arg)
+        if len(arg) == 1:
+            weapon = "sword"
+        elif len(arg) == 3:
+            match arg[1:]:
+                case ['with', arms]:
+                    if arms not in get_weapons():
+                        print(f"Unknown weapon\n{prompt}", end='')
+                    else:
+                        weapon = arms
+                case _:
+                    print(f"Unknown arguments\n{prompt}", end='')
+                    return
+        else:
+            print(f"Unknown arguments\n{prompt}", end='')
+            return
+        self.socket.sendall(f"attack {arg[0]} {weapon}\n".encode())
+
+    def do_sayall(self, arg):
+        """Process 'sayall' command."""
+        self.socket.sendall(f"sayall {arg}\n".encode())
+
+    def do_EOF(self, arg):
+        """If EOF is seen, return 1."""
+        return 1
+
+    def emptyline(self):
+        pass
 
 
 # https://stackoverflow.com/questions/48024720/python-how-to-check-if-socket-is-still-connected

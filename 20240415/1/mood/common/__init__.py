@@ -30,6 +30,7 @@ def get_all_monster_names():
     """
     return list(cowsay.list_cows()) + list(cows_dict)
 
+
 def get_custom_monster_names():
     """
     :return: list with names of custom monsters
@@ -48,3 +49,7 @@ def get_cowsay_msg(monster_name, msg):
         return cowsay.cowsay(msg, cowfile=cows_dict[monster_name])
     else:
         return cowsay.cowsay(msg, cow=monster_name)
+
+
+def get_weapons():
+    return list(weapons)

@@ -2,14 +2,13 @@
 import cowsay
 import io
 import shlex
-import cmd
 import asyncio
 import random
-from .common import (get_all_monster_names,
-                     get_cowsay_msg)
+from ..common import (get_all_monster_names,
+                      get_cowsay_msg)
 
 
-TIME_INTERVAL_FOR_MOVING_MONSTER = 30
+TIME_INTERVAL_FOR_MOVING_MONSTER = 3000
 
 
 async def put_broadcast(msg):
@@ -51,6 +50,7 @@ class Field:
             msg = f"{clients[id].get_name()} added monster {monster.get_name()} to ({x}, {y}) saying {monster.get_phrase()}"
             if subst:
                 msg += "\nReplaced the old monster"
+            print(f"LOG: {msg}")
             await put_broadcast(msg)
         else:
             await clients_queue[id].put("Cannot add unknown monster")
@@ -92,7 +92,7 @@ class Field:
         pos = (x, y)
         if pos in self.get_monsters_pos():
             monster = self.get_monster(pos)
-            msg = get_cowsay_msg(monster.get_name())
+            msg = get_cowsay_msg(monster.get_name(), monster.get_phrase())
             await clients_queue[id].put(msg)
 
     async def wandering_monster(self):
@@ -168,16 +168,15 @@ class Player:
         """:return: player's current coordinates."""
         return (self.x, self.y)
 
-    async def make_move(self, side):
+    async def make_move(self, x, y):
         """
         Move player on the field in some direction.
 
         :param side: name of the side (up, down, left, right)
         :type side: str
         """
-        dirs = self._dir_dict[side]
-        self.x += dirs[0]
-        self.y += dirs[1]
+        self.x += x
+        self.y += y
         self.x %= Field.size
         self.y %= Field.size
         await clients_queue[self.id].put(f"Moved to ({self.x}, {self.y})")
@@ -278,124 +277,6 @@ class Monster:
             field.delete_mon(self.coords)
 
 
-class MUD_shell(cmd.Cmd):
-    """
-    Class which inherits :class:`cmd.Cmd` to parse and process commands from the user.
-
-    :param player: :class:`Player` object with whom this class instance is associated
-    :type player: :class:`Player`
-    """
-
-    def __init__(self, player: Player):
-        self.player = player
-        self.id = player.get_id()
-
-    async def do_up(self, arg):
-        """Process 'up' command."""
-        await self.player.make_move("up")
-
-    async def do_down(self, arg):
-        """Process 'down' command."""
-        await self.player.make_move("down")
-
-    async def do_right(self, arg):
-        """Process 'right' command."""
-        await self.player.make_move("right")
-
-    async def do_left(self, arg):
-        """Process 'left' command."""
-        await self.player.make_move("left")
-
-    async def do_addmon(self, arg):
-        """
-        Process 'addmon' command.
-
-        And check correctness of given arguments
-        """
-        options = shlex.split(arg)
-        if len(options) != 8:
-            await clients_queue[self.id].put("Invalid arguments")
-            return
-        param_dict = {}
-        param_dict['name'] = options[0]
-        opt_set = set()
-        i = 1
-        err_flag = False
-        while i < len(options):                                             # TODO: can parameters occure twice?
-            match options[i]:
-                case 'hello':
-                    param_dict['phrase'] = options[i+1]
-                    opt_set.add('hello')
-                    i += 2
-                case 'hp':
-                    try:
-                        hp = int(options[i+1])
-                    except Exception:
-                        await clients_queue[self.id].put('Invalid arguments')
-                        err_flag = True
-                        break
-                    if not (hp > 0):
-                        await clients_queue[self.id].put('Invalid arguments')
-                        err_flag = True
-                        break
-                    param_dict['hp'] = hp
-                    opt_set.add('hp')
-                    i += 2
-                case 'coords':
-                    try:
-                        x = int(options[i+1])
-                        y = int(options[i+2])
-                    except Exception:
-                        await clients_queue[self.id].put('Invalid arguments')
-                        err_flag = True
-                        break
-                    if not (0 <= x <= Field.size and 0 <= y <= Field.size):
-                        await clients_queue[self.id].put('Invalid arguments')
-                        err_flag = True
-                        break
-                    opt_set.add('coords')
-                    param_dict['coords'] = (x, y)
-                    i += 3
-                case _:
-                    await clients_queue[self.id].put('Invalid arguments')
-                    err_flag = True
-                    return
-        if err_flag:
-            return
-        if opt_set != {'hello', 'hp', 'coords'}:
-            await clients_queue[self.id].put('Invalid arguments')
-            return
-        await field.add_monster(x, y, Monster(**param_dict), self.id)
-
-    async def do_attack(self, arg):
-        """Process 'attack' command."""
-        arg = shlex.split(arg)
-        weapon = 'sword'
-        if len(arg) == 1:
-            await self.player.attack(arg[0], weapon)
-        elif len(arg) == 3:
-            match arg[1:]:
-                case ['with', arms]:
-                    if arms not in self.player.get_weapons():
-                        await clients_queue[self.id].put("Unknown weapon")
-                    else:
-                        await self.player.attack(arg[0], arms)
-                case _:
-                    await clients_queue[self.id].put("Invalid arguments")
-                    return
-        else:
-            await clients_queue[self.id].put("Invalid arguments")
-            return
-
-    async def do_sayall(self, arg):
-        """Process 'sayall' command."""
-        await self.player.sayall(arg)
-
-    def do_EOF(self, arg):
-        """If EOF is seen, return 1."""
-        return 1
-
-
 field = Field()
 
 clients = {}                        # client_id to client's Player class
@@ -437,8 +318,28 @@ async def play(reader, writer):
         writer.close()
         await writer.wait_closed()
         return
-
-    shell = MUD_shell(clients[client_id])
+    
+    async def execute_command(cmd):
+        nonlocal reader, writer 
+        cmd = shlex.split(cmd)
+        match cmd:
+            case ['move', x, y]:
+                x, y = int(x), int(y)
+                await clients[client_id].make_move(int(x), int(y))
+            case ['addmon', name, x, y, message, hp]:
+                x, y, hp = int(x), int(y), int(hp)
+                param_dict = {}
+                param_dict['coords'] = (x, y)
+                param_dict['hp'] = hp
+                param_dict['phrase'] = message
+                param_dict['name'] = name
+                await field.add_monster(x, y, Monster(**param_dict), client_id)
+            case ['attack', name, weapon]:
+                await clients[client_id].attack(name, weapon)
+            case ['sayall', msg]:
+                await clients[client_id].sayall(msg)
+            case _:
+                raise Exception
 
     receive_data_from_client = asyncio.create_task(reader.readline())
     while not reader.at_eof():
@@ -450,7 +351,7 @@ async def play(reader, writer):
                 receive_data_from_client = asyncio.create_task(reader.readline())
                 data = q.result().decode().strip()
                 try:
-                    shell.onecmd(data)
+                    await execute_command(data)
                 except Exception as e:
                     print("LOG: while handling user's command exception occure\n", e)
                     await clients_queue[client_id].put("Something wrong with command")
@@ -477,7 +378,7 @@ async def moving_monster_daemon():
     while True:
         print("LOG: invoked daemon for moving monsters")
         await field.wandering_monster()
-        await asyncio.sleep(10)
+        await asyncio.sleep(TIME_INTERVAL_FOR_MOVING_MONSTER)
 
 
 async def main():
