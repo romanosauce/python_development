@@ -318,9 +318,8 @@ async def play(reader, writer):
         writer.close()
         await writer.wait_closed()
         return
-    
+
     async def execute_command(cmd):
-        nonlocal reader, writer 
         cmd = shlex.split(cmd)
         match cmd:
             case ['move', x, y]:
