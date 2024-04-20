@@ -6,6 +6,11 @@ weapons = {'sword': 10,
            'spear': 15,
            'axe': 20}
 
+TIME_INTERVAL_FOR_MOVING_MONSTER = 30
+FIELD_SIZE = 10
+READ_FROM_FILE_TIMEOUT = 3
+
+
 jgsbat = cowsay.read_dot_cow(io.StringIO('''
 $the_cow = <<EOC;
          $thoughts

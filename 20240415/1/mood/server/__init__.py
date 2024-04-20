@@ -5,10 +5,9 @@ import shlex
 import asyncio
 import random
 from ..common import (get_all_monster_names,
-                      get_cowsay_msg)
-
-
-TIME_INTERVAL_FOR_MOVING_MONSTER = 3000
+                      get_cowsay_msg,
+                      TIME_INTERVAL_FOR_MOVING_MONSTER,
+                      FIELD_SIZE)
 
 
 async def put_broadcast(msg):
@@ -24,7 +23,7 @@ class Field:
     Stores monsters' positions, adds and deletets monster to a field
     """
 
-    size: int = 10
+    size: int = FIELD_SIZE
     """Width (in cells) of the field."""
 
     def __init__(self):

@@ -5,12 +5,13 @@ import readline
 import shlex
 import cmd
 import time
-from ..common import get_weapons, get_all_monster_names
+from ..common import (get_weapons,
+                      get_all_monster_names,
+                      FIELD_SIZE,
+                      READ_FROM_FILE_TIMEOUT)
 
 
 prompt = ">>> "
-FIELD_SIZE = 10
-READ_FROM_FILE_TIMEOUT = 3
 
 
 class MUD_shell(cmd.Cmd):

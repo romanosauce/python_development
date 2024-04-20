@@ -1,6 +1,6 @@
 """Module for starting client and print received data in parallel."""
 
-from . import msg_reciever, MUD_shell, READ_FROM_FILE_TIMEOUT
+from . import msg_reciever, MUD_shell, READ_FROM_FILE_TIMEOUT, prompt
 import sys
 import socket
 import threading
@@ -25,7 +25,6 @@ if '--file' in sys.argv[2:]:
     from_file = True
 
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-    prompt = ">>> "
     s.connect((host, port))
     msg_handler = threading.Thread(target=msg_reciever,
                                    args=(s, prompt))
