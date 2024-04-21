@@ -21,6 +21,14 @@ def _(locale, text):
 
 
 def ngettext(locale, *args):
+    """
+    Translate plural forms with certain locale.
+
+    :param locale: name of the locale or 'default'
+    :type locale: str
+
+    parameters in \*args are passed to :meth:`gettext.ngettext`
+    """
     return LOCALE.get(locale, LOCALE["default"]).ngettext(*args)
 
 
@@ -201,9 +209,11 @@ class Player:
         return (self.x, self.y)
 
     def set_locale(self, locale):
+        """Set client's locale."""
         self.locale = locale
 
     def get_locale(self):
+        """Get client's locale."""
         return self.locale
 
     async def make_move(self, x, y):

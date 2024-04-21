@@ -147,6 +147,7 @@ class MUD_shell(cmd.Cmd):
                 print(f"Invalid arguments\n{prompt}", end='')
 
     def do_locale(self, arg):
+        """Process 'locale' command."""
         self.socket.sendall(f"locale {arg}\n".encode())
         print(prompt, end="")
 
