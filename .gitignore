@@ -4,3 +4,4 @@ build
 *.mood
 #ignoring compiled translations
 *.mo
+*.pot
