@@ -1,4 +1,4 @@
-"""Methods for client work"""
+"""Methods for client work."""
 
 import socket
 import readline
@@ -15,16 +15,17 @@ prompt = ">>> "
 
 
 class MUD_shell(cmd.Cmd):
-    """
-    Class which inherits :class:`cmd.Cmd` to parse and process commands from the user.
-    """
+    """Class which inherits :class:`cmd.Cmd` to parse and process commands from the user."""
+
     def __init__(self, socket, timeout=0, *args, **kwargs):
+        """Init MUD_shell object."""
         self.socket = socket
         self.timeout = timeout
         self.prompt = ""
         super().__init__(*args, **kwargs)
 
     def precmd(self, line):
+        """Sleep if read from file not to overflood server."""
         time.sleep(self.timeout)
         return super().precmd(line)
 
@@ -150,6 +151,7 @@ class MUD_shell(cmd.Cmd):
         return 1
 
     def emptyline(self):
+        """If emptyline do nothing."""
         pass
 
 

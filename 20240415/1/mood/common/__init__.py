@@ -30,25 +30,24 @@ cows_dict = {'jgsbat': jgsbat}
 
 
 def get_all_monster_names():
-    """
-    :return: list with names of all monsters
-    """
+    """:return: list with names of all monsters."""
     return list(cowsay.list_cows()) + list(cows_dict)
 
 
 def get_custom_monster_names():
-    """
-    :return: list with names of custom monsters
-    """
+    """:return: list with names of custom monsters."""
     return list(cows_dict)
 
 
 def get_cowsay_msg(monster_name, msg):
     """
+    Get message said by specific monster.
+
     :param monster_name: name of monster
     :type monster_name: str
     :param msg: message for cowsay
     :type msg: str
+    :return: message said by specific monster
     """
     if monster_name in get_custom_monster_names():
         return cowsay.cowsay(msg, cowfile=cows_dict[monster_name])
@@ -57,4 +56,5 @@ def get_cowsay_msg(monster_name, msg):
 
 
 def get_weapons():
+    """:return: names of all available weapons."""
     return list(weapons)

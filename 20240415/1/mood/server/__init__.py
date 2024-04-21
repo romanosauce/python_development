@@ -9,6 +9,12 @@ from ..common import (get_all_monster_names,
 
 
 async def put_broadcast(msg):
+    """
+    Send message to all clients.
+
+    :param msg: msg to send
+    :type msg: str
+    """
     for client_id in clients:
         await clients_queue[client_id].put(msg)
 
@@ -25,6 +31,7 @@ class Field:
     """Width (in cells) of the field."""
 
     def __init__(self):
+        """Init Field object."""
         self.field = [[0 for i in range(self.size)] for j in range(self.size)]
         self.monsters_pos = {}
 
@@ -125,7 +132,7 @@ class Field:
 
 class Player:
     """
-    Class representing a player who interacts with field, monsters and other users
+    Class representing a player who interacts with field, monsters and other users.
 
     :param field: :class:`Field` object where to place the player
     :type field: :class:`Field`
@@ -143,6 +150,7 @@ class Player:
     """Available weapons for user's attack."""
 
     def __init__(self, field, id, name):
+        """Init Player object."""
         self.x = 0
         self.y = 0
         self.field = field
