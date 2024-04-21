@@ -63,7 +63,7 @@ class MUD_shell(cmd.Cmd):
         while i < len(options):                                             # TODO: can parameters occure twice?
             match options[i]:
                 case 'hello':
-                    param_dict['phrase'] = options[i+1]
+                    param_dict['phrase'] = shlex.quote(options[i+1])
                     opt_set.add('hello')
                     i += 2
                 case 'hp':
@@ -145,6 +145,10 @@ class MUD_shell(cmd.Cmd):
                 self.socket.sendall((msg + '\n').encode())
             case _:
                 print(f"Invalid arguments\n{prompt}", end='')
+
+    def do_locale(self, arg):
+        self.socket.sendall(f"locale {arg}\n".encode())
+        print(prompt, end="")
 
     def do_EOF(self, arg):
         """If EOF is seen, return 1."""

@@ -2,10 +2,26 @@
 import shlex
 import asyncio
 import random
+import gettext
+import os
 from ..common import (get_all_monster_names,
                       get_cowsay_msg,
                       TIME_INTERVAL_FOR_MOVING_MONSTER,
                       FIELD_SIZE)
+
+_podir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..', 'po'))
+LOCALE = {
+        "ru_RU.UTF-8": gettext.translation("mood", _podir, ["ru"], fallback=True),
+        "default": gettext.NullTranslations()
+}
+
+
+def _(locale, text):
+    return LOCALE.get(locale, LOCALE["default"]).gettext(text)
+
+
+def ngettext(locale, *args):
+    return LOCALE.get(locale, LOCALE["default"]).ngettext(*args)
 
 
 async def put_broadcast(msg):
@@ -51,13 +67,21 @@ class Field:
             if (x, y) in self.monsters_pos:
                 subst = True
             self.monsters_pos[(x, y)] = monster
-            msg = f"{clients[id].get_name()} added monster {monster.get_name()} to ({x}, {y}) saying {monster.get_phrase()}"
-            if subst:
-                msg += "\nReplaced the old monster"
-            print(f"LOG: {msg}")
-            await put_broadcast(msg)
+            for client_id in clients:
+                locale = clients[client_id].get_locale()
+                await clients_queue[client_id].put(ngettext(
+                    locale,
+                    "{} added monster {} to ({}, {}) saying {} with {} hp",
+                    "{} added monster {} to ({}, {}) saying {} with {} hps", monster.get_hp()).format(
+                 clients[id].get_name(),
+                 monster.get_name(),
+                 x, y,
+                 monster.get_phrase(),
+                 monster.get_hp()))
+                if subst:
+                    await clients_queue[client_id].put(_(locale, "Replaced the old monster"))
         else:
-            await clients_queue[id].put("Cannot add unknown monster")
+            await clients_queue[id].put(_(clients[id].get_locale(), "Cannot add unknown monster"))
 
     def delete_mon(self, coords):
         """
@@ -123,10 +147,12 @@ class Field:
             monster = self.get_monster(chosed_monster_coords)
             self.delete_mon(chosed_monster_coords)
             self.monsters_pos[new_mon_coords] = monster
-            msg = f"{monster.get_name()} moved to {new_mon_coords}"
             # msg = f"{monster.get_name()} moved one cell {side}"
             for client_id in clients:
-                await clients_queue[client_id].put(msg)
+                locale = clients[client_id].get_locale()
+                await clients_queue[client_id].put(_(locale, "{} moved to {}").format(
+                    monster.get_name(),
+                    new_mon_coords))
                 await self.encounter(*clients[client_id].get_coords(), client_id)
 
 
@@ -156,6 +182,7 @@ class Player:
         self.field = field
         self.id = id
         self.name = name
+        self.locale = 'default'
 
     def get_weapons(self):
         """:return: available weapons."""
@@ -173,6 +200,12 @@ class Player:
         """:return: player's current coordinates."""
         return (self.x, self.y)
 
+    def set_locale(self, locale):
+        self.locale = locale
+
+    def get_locale(self):
+        return self.locale
+
     async def make_move(self, x, y):
         """
         Move player on the field in some direction.
@@ -184,7 +217,8 @@ class Player:
         self.y += y
         self.x %= Field.size
         self.y %= Field.size
-        await clients_queue[self.id].put(f"Moved to ({self.x}, {self.y})")
+        await clients_queue[self.id].put(_(self.get_locale(), "Moved to ({}, {})").format(
+            self.x, self.y))
         await self.field.encounter(self.x, self.y, self.id)
 
     async def attack(self, name, weapon):
@@ -204,11 +238,20 @@ class Player:
                 self.field.get_monster(pos).get_name() == name):
             monster = self.field.get_monster(pos)
             damage = damage if monster.get_hp() > damage else monster.get_hp()
-            msg = f"{self.name} attacked {monster.get_name()} with {weapon}\ncausing {damage} hp damage"
-            await put_broadcast(msg)
+            for client_id in clients:
+                locale = clients[client_id].get_locale()
+                await clients_queue[client_id].put(ngettext(
+                    locale,
+                    "{} attacked {} with {}\ncausing {} hp damage",
+                    "{} attacked {} with {}\ncausing {} hps damage", damage).format(
+                 self.get_name(),
+                 monster.get_name(),
+                 weapon,
+                 damage))
             await monster.get_damage(damage, self.id)
         else:
-            await clients_queue[self.id].put(f"No {name} here")
+            locale = self.get_locale()
+            await clients_queue[self.id].put(_(locale, "No {} here").format(name))
 
     async def sayall(self, msg):
         """
@@ -276,9 +319,15 @@ class Monster:
         """
         if damage < self.hp:
             self.hp -= damage
-            await put_broadcast(f"{self.name} now has {self.hp}")
+            for client_id in clients:
+                locale = clients[client_id].get_locale()
+                await clients_queue[client_id].put(
+                        _(locale, "{} now has {}").format(self.get_name(), self.get_hp()))
         else:
-            await put_broadcast(f"{self.name} died")
+            for client_id in clients:
+                locale = clients[client_id].get_locale()
+                await clients_queue[client_id].put(
+                        _(locale, "{} died").format(self.get_name()))
             field.delete_mon(self.coords)
 
 
@@ -310,10 +359,12 @@ async def play(reader, writer):
     if name not in clients_names:
         clients[client_id] = Player(field, client_id, name)
         clients_names.add(name)
-        msg = f"{name} has joined the field"
-        await put_broadcast(msg)
+        for id in clients:
+            locale = clients[id].get_locale()
+            await clients_queue[id].put(
+                    _(locale, "{} has joined the field").format(name))
     else:
-        msg = f"You are an impostor, {name}!\nGet outta here"
+        msg = "You are an impostor, {name}!\nGet outta here"
         writer.write(msg.encode())
         receive_data_from_client.cancel()
         write_data_to_client.cancel()
@@ -346,12 +397,21 @@ async def play(reader, writer):
             case ['movemonsters', state]:
                 if state == 'off':
                     daemon.cancel()
-                    await put_broadcast("Moving monsters: off")
+                    for id in clients:
+                        locale = clients[id].get_locale()
+                        await clients_queue[id].put(
+                                _(locale, "Moving monsters: off"))
                 else:
                     if daemon.cancelled():
                         daemon = asyncio.create_task(moving_monster_daemon())
                         await asyncio.sleep(0)
-                    await put_broadcast("Moving monsters: on")
+                    for id in clients:
+                        locale = clients[id].get_locale()
+                        await clients_queue[id].put(
+                                _(locale, "Moving monsters: on"))
+            case ['locale', loc]:
+                clients[client_id].set_locale(loc)
+                await clients_queue[client_id].put(_(loc, "Set up locale: {}").format(loc))
             case _:
                 raise Exception
 
@@ -368,7 +428,8 @@ async def play(reader, writer):
                     await execute_command(data)
                 except Exception as e:
                     print("LOG: while handling user's command exception occure\n", e)
-                    await clients_queue[client_id].put("Something wrong with command")
+                    await clients_queue[client_id].put(_(clients[client_id].get_locale(),
+                                                         "Something wrong with command"))
             else:
                 data = q.result()
                 while not clients_queue[client_id].empty():
@@ -378,6 +439,10 @@ async def play(reader, writer):
             await writer.drain()
 
     print(f"LOG: {name} disconnected")
+    for id in clients:
+        locale = clients[id].get_locale()
+        await clients_queue[id].put(
+                _(locale, "{} disconnected").format(name))
     receive_data_from_client.cancel()
     write_data_to_client.cancel()
     clients_names.remove(name)
