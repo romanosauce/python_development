@@ -133,6 +133,18 @@ class MUD_shell(cmd.Cmd):
         """Process 'sayall' command."""
         self.socket.sendall(f"sayall {arg}\n".encode())
 
+    def do_movemonsters(self, arg):
+        """Process 'movemonsters' command."""
+        match arg:
+            case 'on':
+                msg = "movemonsters on"
+                self.socket.sendall((msg + '\n').encode())
+            case 'off':
+                msg = "movemonsters off"
+                self.socket.sendall((msg + '\n').encode())
+            case _:
+                print(f"Invalid arguments\n{prompt}", end='')
+
     def do_EOF(self, arg):
         """If EOF is seen, return 1."""
         return 1

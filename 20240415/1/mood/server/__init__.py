@@ -1,6 +1,4 @@
 """Main logic for managing connections and handling user commands."""
-import cowsay
-import io
 import shlex
 import asyncio
 import random
@@ -319,6 +317,7 @@ async def play(reader, writer):
         return
 
     async def execute_command(cmd):
+        global daemon
         cmd = shlex.split(cmd)
         match cmd:
             case ['move', x, y]:
@@ -336,6 +335,15 @@ async def play(reader, writer):
                 await clients[client_id].attack(name, weapon)
             case ['sayall', msg]:
                 await clients[client_id].sayall(msg)
+            case ['movemonsters', state]:
+                if state == 'off':
+                    daemon.cancel()
+                    await put_broadcast("Moving monsters: off")
+                else:
+                    if daemon.cancelled():
+                        daemon = asyncio.create_task(moving_monster_daemon())
+                        await asyncio.sleep(0)
+                    await put_broadcast("Moving monsters: on")
             case _:
                 raise Exception
 
@@ -356,7 +364,7 @@ async def play(reader, writer):
             else:
                 data = q.result()
                 while not clients_queue[client_id].empty():
-                    data += '\n' + clients_queue[client_id].get_nowait()
+                    data += '\n' + await clients_queue[client_id].get()
                 write_data_to_client = asyncio.create_task(clients_queue[client_id].get())
                 writer.write((data).encode())
             await writer.drain()
@@ -383,6 +391,7 @@ async def main():
     """Create server, start daemon."""
     print("LOG: starting server")
     server = await asyncio.start_server(play, '0.0.0.0', 1337)
+    global daemon
     daemon = asyncio.create_task(moving_monster_daemon())
     await asyncio.sleep(0)
     async with server:

@@ -6,7 +6,7 @@ weapons = {'sword': 10,
            'spear': 15,
            'axe': 20}
 
-TIME_INTERVAL_FOR_MOVING_MONSTER = 30
+TIME_INTERVAL_FOR_MOVING_MONSTER = 5
 FIELD_SIZE = 10
 READ_FROM_FILE_TIMEOUT = 3
 
