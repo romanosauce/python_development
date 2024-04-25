@@ -1,0 +1,100 @@
+# Russian (Russia) translations for PROJECT.
+# Copyright (C) 2024 ORGANIZATION
+# This file is distributed under the same license as the PROJECT project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2024.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2024-04-22 00:06+0300\n"
+"PO-Revision-Date: 2024-04-21 23:04+0300\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: ru_RU\n"
+"Language-Team: ru_RU <LL@li.org>\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
+"n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.14.0\n"
+
+#: mood/server/__init__.py:75
+msgid "{} added monster {} to ({}, {}) saying {} with {} hp"
+msgid_plural "{} added monster {} to ({}, {}) saying {} with {} hps"
+msgstr[0] ""
+"{} добавил монстра {} в позицию ({}, {}), говорящего {} имеющего {} oчко "
+"здоровья"
+msgstr[1] ""
+"{} добавил монстра {} в позицию ({}, {}), говорящего {} имеющего {} oчкa "
+"здоровья"
+msgstr[2] ""
+"{} добавил монстра {} в позицию ({}, {}), говорящего {} имеющего {} oчков"
+" здоровья"
+
+#: mood/server/__init__.py:82
+msgid "Replaced the old monster"
+msgstr "Заменен старый монстр"
+
+#: mood/server/__init__.py:84
+msgid "Cannot add unknown monster"
+msgstr "Монстр неизвестен"
+
+#: mood/server/__init__.py:153
+msgid "{} moved to {}"
+msgstr "{} переместился в {}"
+
+#: mood/server/__init__.py:220
+msgid "Moved to ({}, {})"
+msgstr "Переместились в ({}, {})"
+
+#: mood/server/__init__.py:243
+msgid ""
+"{} attacked {} with {}\n"
+"causing {} hp damage"
+msgid_plural ""
+"{} attacked {} with {}\n"
+"causing {} hps damage"
+msgstr[0] "{} атаковал {} оружием {}\nи нанёс {} очко урона"
+msgstr[1] "{} атаковал {} оружием {}\nи нанёс {} очка урона"
+msgstr[2] "{} атаковал {} оружием {}\nи нанёс {} очков урона"
+
+#: mood/server/__init__.py:254
+msgid "No {} here"
+msgstr "{} здесь нет"
+
+#: mood/server/__init__.py:325
+msgid "{} now has {}"
+msgstr "У {} теперь {} хп"
+
+#: mood/server/__init__.py:330
+msgid "{} died"
+msgstr "{} умер"
+
+#: mood/server/__init__.py:365
+msgid "{} has joined the field"
+msgstr "{} присоединился к игре"
+
+#: mood/server/__init__.py:403
+msgid "Moving monsters: off"
+msgstr "Бродячие монстры выключены"
+
+#: mood/server/__init__.py:411
+msgid "Moving monsters: on"
+msgstr "Бродячие монстры включены"
+
+#: mood/server/__init__.py:414
+msgid "Set up locale: {}"
+msgstr "Установлена локаль: {}"
+
+#: mood/server/__init__.py:431
+msgid "Something wrong with command"
+msgstr "Перепроверьте команду (или что-то не так с сервером, я честно хз)"
+
+#: mood/server/__init__.py:445
+msgid "{} disconnected"
+msgstr "{} отключился"
+
+#~ msgid "default"
+#~ msgstr ""
+
