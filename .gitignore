@@ -1,7 +1,9 @@
 # ignoring build files
 build
-#ignoring scripting files
+# ignoring scripting files
 *.mood
-#ignoring compiled translations
+# ignoring compiled translations
 *.mo
 *.pot
+# ignoring doit
+*.db
