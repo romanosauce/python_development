@@ -19,7 +19,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.14.0\n"
 
-#: mood/server/__init__.py:75
+#: mood/server/__init__.py:83
 msgid "{} added monster {} to ({}, {}) saying {} with {} hp"
 msgid_plural "{} added monster {} to ({}, {}) saying {} with {} hps"
 msgstr[0] ""
@@ -32,66 +32,72 @@ msgstr[2] ""
 "{} добавил монстра {} в позицию ({}, {}), говорящего {} имеющего {} oчков"
 " здоровья"
 
-#: mood/server/__init__.py:82
+#: mood/server/__init__.py:90
 msgid "Replaced the old monster"
 msgstr "Заменен старый монстр"
 
-#: mood/server/__init__.py:84
+#: mood/server/__init__.py:92
 msgid "Cannot add unknown monster"
 msgstr "Монстр неизвестен"
 
-#: mood/server/__init__.py:153
+#: mood/server/__init__.py:161
 msgid "{} moved to {}"
 msgstr "{} переместился в {}"
 
-#: mood/server/__init__.py:220
+#: mood/server/__init__.py:230
 msgid "Moved to ({}, {})"
 msgstr "Переместились в ({}, {})"
 
-#: mood/server/__init__.py:243
+#: mood/server/__init__.py:253
 msgid ""
 "{} attacked {} with {}\n"
 "causing {} hp damage"
 msgid_plural ""
 "{} attacked {} with {}\n"
 "causing {} hps damage"
-msgstr[0] "{} атаковал {} оружием {}\nи нанёс {} очко урона"
-msgstr[1] "{} атаковал {} оружием {}\nи нанёс {} очка урона"
-msgstr[2] "{} атаковал {} оружием {}\nи нанёс {} очков урона"
+msgstr[0] ""
+"{} атаковал {} оружием {}\n"
+"и нанёс {} очко урона"
+msgstr[1] ""
+"{} атаковал {} оружием {}\n"
+"и нанёс {} очка урона"
+msgstr[2] ""
+"{} атаковал {} оружием {}\n"
+"и нанёс {} очков урона"
 
-#: mood/server/__init__.py:254
+#: mood/server/__init__.py:264
 msgid "No {} here"
 msgstr "{} здесь нет"
 
-#: mood/server/__init__.py:325
+#: mood/server/__init__.py:335
 msgid "{} now has {}"
 msgstr "У {} теперь {} хп"
 
-#: mood/server/__init__.py:330
+#: mood/server/__init__.py:340
 msgid "{} died"
 msgstr "{} умер"
 
-#: mood/server/__init__.py:365
+#: mood/server/__init__.py:375
 msgid "{} has joined the field"
 msgstr "{} присоединился к игре"
 
-#: mood/server/__init__.py:403
+#: mood/server/__init__.py:413
 msgid "Moving monsters: off"
 msgstr "Бродячие монстры выключены"
 
-#: mood/server/__init__.py:411
+#: mood/server/__init__.py:421
 msgid "Moving monsters: on"
 msgstr "Бродячие монстры включены"
 
-#: mood/server/__init__.py:414
+#: mood/server/__init__.py:424
 msgid "Set up locale: {}"
 msgstr "Установлена локаль: {}"
 
-#: mood/server/__init__.py:431
+#: mood/server/__init__.py:441
 msgid "Something wrong with command"
 msgstr "Перепроверьте команду (или что-то не так с сервером, я честно хз)"
 
-#: mood/server/__init__.py:445
+#: mood/server/__init__.py:455
 msgid "{} disconnected"
 msgstr "{} отключился"
 
