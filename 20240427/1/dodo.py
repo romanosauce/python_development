@@ -26,3 +26,24 @@ def task_mo():
             'targets': ['po/ru_RU.UTF-8/LC_MESSAGES/mood.mo'],
             'doc': 'compile translations',
             }
+
+
+def task_rmdb():
+    return {
+            'actions': ['rm .*.db'],
+            'doc': 'task for removing doit database',
+            }
+
+
+def task_i18n():
+    return {
+            'actions': None,
+            'task_dep': ['pot', 'po', 'mo'],
+            'doc': 'task for generating translations',
+            }
+
+
+def task_html():
+    return {
+            'actions': ['sphinx-build -M html ./docs/source ./docs/build'],
+            }
