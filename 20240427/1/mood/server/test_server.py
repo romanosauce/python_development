@@ -78,7 +78,7 @@ kiss died'''
         self.assertEqual(response, ans)
 
     def test_5_ru_attack(self):
-        response = send_and_receive_command('addmon kiss coords 0 1 hello "aaa aaa" hp 21', self.s)
+        response = send_and_receive_command('addmon kiss  0 1 "aaa aaa" 21', self.s)
         ans = 'TESTING добавил монстра kiss в позицию (0, 1), говорящего aaa aaa имеющего 21 oчко здоровья'
         self.assertEqual(response, ans)
 
