@@ -4,6 +4,7 @@ from doit.task import clean_targets
 
 DOIT_CONFIG = {'default_tasks': ['html']}
 
+
 def task_pot():
     return {
             'actions': ['pybabel extract --keywords=ngettext:2,3 --keywords=_:2 mood -o server.pot'],
@@ -56,6 +57,7 @@ def task_html():
             'clean': [(shutil.rmtree, ["docs/build"])],
             }
 
+
 def task_erase():
     return {
             'actions': ['git clean -xdf'],
@@ -68,3 +70,11 @@ def task_test():
             'task_dep': ['i18n'],
             'doc': 'task for testing client and server',
             }
+
+
+def task_sdist():
+    """Create source distribution."""
+    return {
+            'actions': ['python -m build -s -n'],
+            'task_dep': ['erase'],
+           }

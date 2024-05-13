@@ -5,9 +5,9 @@ name = "pypi"
 
 [packages]
 python-cowsay = "*"
-doit = "*"
 
 [dev-packages]
+doit = "*"
 flake8 = "*"
 pydocstyle = "*"
 sphinx = "*"

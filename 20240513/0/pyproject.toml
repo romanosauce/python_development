@@ -1,0 +1,11 @@
+[project]
+name = "mood"
+version = "0.0.1"
+description = "Multi-user dungeon with cows"
+
+[build-system]
+requires = ["Sphinx", "build", "coverage", "doit", "flake8", "pydocstyle", "setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.package-dir]
+mood = ""
