@@ -14,7 +14,7 @@ from ..common import (get_weapons,
 
 
 prompt = ">>> "
-doc_path = "docs/build/html/index.html"
+doc_path = "mood/docs/build/html/index.html"
 
 
 class MUD_shell(cmd.Cmd):

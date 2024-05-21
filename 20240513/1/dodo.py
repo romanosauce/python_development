@@ -50,7 +50,7 @@ def task_i18n():
 
 def task_html():
     return {
-            'actions': ['sphinx-build -M html ./docs/source ./docs/build'],
+            'actions': ['sphinx-build -M html ./docs/source ./mood/docs/build'],
             'file_dep': glob.glob('docs/source/*.rst') + glob.glob('mood/*/*.py'),
             'targets': ['docs/build'],
             'doc': 'generate html documentation',
