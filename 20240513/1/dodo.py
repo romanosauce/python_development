@@ -63,3 +63,9 @@ def task_test():
             'task_dep': ['i18n'],
             'doc': 'task for testing client and server',
             }
+
+def task_erase():
+    return {
+            'actions': ['git clean -xdf'],
+            'doc': 'task for cleaning uncommited files',
+            }
