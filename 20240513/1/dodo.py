@@ -53,6 +53,7 @@ def task_html():
             'actions': ['sphinx-build -M html ./docs/source ./docs/build'],
             'file_dep': glob.glob('docs/source/*.rst') + glob.glob('mood/*/*.py'),
             'targets': ['docs/build'],
+            'doc': 'generate html documentation',
             'clean': [(shutil.rmtree, ["docs/build"])],
             }
 
