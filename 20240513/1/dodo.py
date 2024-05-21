@@ -1,5 +1,6 @@
 import glob
 import shutil
+import os
 from doit.task import clean_targets
 
 DOIT_CONFIG = {'default_tasks': ['html']}
@@ -25,7 +26,10 @@ def task_po():
 
 def task_mo():
     return {
-            'actions': ['pybabel compile -D mood -l ru_RU.UTF-8 -d mood -i po/ru_RU.UTF-8/LC_MESSAGES/mood.po'],
+            'actions': [
+                (os.makedirs, ["mood/ru_RU.UTF-8/LC_MESSAGES"], {"exist_ok": True}),
+                'pybabel compile -D mood -l ru_RU.UTF-8 -d mood -i po/ru_RU.UTF-8/LC_MESSAGES/mood.po'
+            ],
             'file_dep': ['po/ru_RU.UTF-8/LC_MESSAGES/mood.po'],
             'targets': ['mood/mood.mo'],
             'doc': 'compile translations',

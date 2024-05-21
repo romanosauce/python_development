@@ -7,7 +7,6 @@ import cmd
 import time
 import threading
 import webbrowser
-import pathlib
 from ..common import (get_weapons,
                       FIELD_SIZE,
                       READ_FROM_FILE_TIMEOUT)
@@ -157,7 +156,7 @@ class MUD_shell(cmd.Cmd):
 
     def do_documentation(self, arg):
         """Open generated documentation."""
-        webbrowser.open(str(pathlib.Path(doc_path).absolute()))
+        webbrowser.open(doc_path)
 
     def do_EOF(self, arg):
         """If EOF is seen, return 1."""
