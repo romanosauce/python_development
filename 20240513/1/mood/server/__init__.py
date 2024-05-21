@@ -3,13 +3,13 @@ import shlex
 import asyncio
 import random
 import gettext
-import os
+from pathlib import Path
 from ..common import (get_all_monster_names,
                       get_cowsay_msg,
                       TIME_INTERVAL_FOR_MOVING_MONSTER,
                       FIELD_SIZE)
 
-_podir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..', 'po'))
+_podir = str(Path(__file__).parents[1])
 LOCALE = {
         "ru_RU.UTF-8": gettext.translation("mood", _podir, ["ru"], fallback=True),
         "default": gettext.NullTranslations()

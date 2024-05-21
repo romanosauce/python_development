@@ -1,5 +1,4 @@
 """Module for starting client and print received data in parallel."""
-
 from . import start_client
 import sys
 

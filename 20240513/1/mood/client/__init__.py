@@ -10,10 +10,11 @@ import webbrowser
 from ..common import (get_weapons,
                       FIELD_SIZE,
                       READ_FROM_FILE_TIMEOUT)
+from pathlib import Path
 
 
 prompt = ">>> "
-doc_path = "mood/docs/build/html/index.html"
+doc_path = str(Path(__file__).parents[1] / 'docs/build/html/index.html')
 
 
 class MUD_shell(cmd.Cmd):
