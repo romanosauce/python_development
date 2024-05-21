@@ -25,9 +25,9 @@ def task_po():
 
 def task_mo():
     return {
-            'actions': ['pybabel compile -D mood -l ru_RU.UTF-8 -d po -i po/ru_RU.UTF-8/LC_MESSAGES/mood.po'],
+            'actions': ['pybabel compile -D mood -l ru_RU.UTF-8 -d mood -i po/ru_RU.UTF-8/LC_MESSAGES/mood.po'],
             'file_dep': ['po/ru_RU.UTF-8/LC_MESSAGES/mood.po'],
-            'targets': ['po/ru_RU.UTF-8/LC_MESSAGES/mood.mo'],
+            'targets': ['mood/mood.mo'],
             'doc': 'compile translations',
             'clean': [clean_targets],
             }
