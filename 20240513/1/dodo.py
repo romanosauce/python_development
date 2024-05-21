@@ -65,8 +65,25 @@ def task_test():
             'doc': 'task for testing client and server',
             }
 
+
 def task_erase():
     return {
             'actions': ['git clean -xdf'],
             'doc': 'task for cleaning uncommited files',
+            }
+
+
+def task_sdist():
+    return {
+            'actions': ['python -m build -s -n'],
+            'task_dep': ['erase'],
+            'doc': 'generate source distribution',
+            }
+
+
+def task_wheel():
+    return {
+            'actions': ['python -m build -w'],
+            'task_dep': ['i18n', 'html'],
+            'doc': 'generate wheel',
             }
