@@ -6,12 +6,15 @@ import shlex
 import cmd
 import time
 import threading
+import webbrowser
+import pathlib
 from ..common import (get_weapons,
                       FIELD_SIZE,
                       READ_FROM_FILE_TIMEOUT)
 
 
 prompt = ">>> "
+doc_path = "docs/build/html/index.html"
 
 
 class MUD_shell(cmd.Cmd):
@@ -151,6 +154,10 @@ class MUD_shell(cmd.Cmd):
         """Process 'locale' command."""
         self.socket.sendall(f"locale {arg}\n".encode())
         print(prompt, end="")
+
+    def do_documentation(self, arg):
+        """Open generated documentation."""
+        webbrowser.open(str(pathlib.Path(doc_path).absolute()))
 
     def do_EOF(self, arg):
         """If EOF is seen, return 1."""
