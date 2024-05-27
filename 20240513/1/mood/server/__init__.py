@@ -21,7 +21,7 @@ def _(locale, text):
 
 
 def ngettext(locale, *args):
-    """
+    r"""
     Translate plural forms with certain locale.
 
     :param locale: name of the locale or 'default'

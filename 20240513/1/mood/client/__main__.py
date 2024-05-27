@@ -4,6 +4,7 @@ import sys
 
 
 def run():
+    """Entry point for client."""
     if len(sys.argv) == 1:
         print("Please provide your login name")
         quit(1)
