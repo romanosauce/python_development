@@ -242,4 +242,4 @@ def start_client(login, in_file=None):
                 shell.cmdloop()
         else:
             shell = MUD_shell(s)
-        shell.cmdloop()
+            shell.cmdloop()
