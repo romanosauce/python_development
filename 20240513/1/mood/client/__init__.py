@@ -241,5 +241,8 @@ def start_client(login, in_file=None):
                 shell.use_rawinput = False
                 shell.cmdloop()
         else:
-            shell = MUD_shell(s)
+            try:
+                shell = MUD_shell(s)
+            except Exception as e:
+                pass
         shell.cmdloop()
