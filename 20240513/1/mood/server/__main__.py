@@ -3,4 +3,8 @@ from . import main
 import asyncio
 
 
-asyncio.run(main())
+def run():
+    asyncio.run(main())
+
+
+run()
