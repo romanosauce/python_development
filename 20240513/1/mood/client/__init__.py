@@ -223,6 +223,7 @@ def msg_reciever(socket, prompt):
 
 
 def start_client(login, in_file=None):
+    """Start client."""
     host = "localhost"
     port = 1337
 
